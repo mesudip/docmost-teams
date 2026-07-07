@@ -21,7 +21,6 @@ env:
 
 jobs:
   build:
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         include:
@@ -33,147 +32,10 @@ jobs:
             suffix: arm64
     runs-on: ${{ matrix.runner }}
     steps:
-      - name: Generate token
-        id: app-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.BUILD_APP_ID }}
-          private-key: ${{ secrets.BUILD_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-
       - name: Checkout with submodules
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ steps.app-token.outputs.token }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push by digest
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: ${{ matrix.platform }}
-          outputs: type=image,name=docmost/docmost,push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=${{ matrix.suffix }}
-          cache-to: type=gha,scope=${{ matrix.suffix }},mode=max
-
-      - name: Export digest
-        run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digest-${{ matrix.suffix }}
-          path: /tmp/digests/*
-          if-no-files-found: error
-
-      - name: Strip v prefix
-        id: strip-v
-        run: echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
-        
-      - name: Export Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: ${{ matrix.platform }}
-          push: false
-          tags: |
-            docmost/docmost:latest
-            docmost/docmost:${{ steps.strip-v.outputs.version }}
-          outputs: type=docker,dest=docmost-${{ matrix.suffix }}.docker.tar
-          cache-from: type=gha,scope=${{ matrix.suffix }}
-
-      - name: Compress image
-        run: gzip docmost-${{ matrix.suffix }}.docker.tar
-
-      - name: Upload image archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image-${{ matrix.suffix }}
-          path: docmost-${{ matrix.suffix }}.docker.tar.gz
-          if-no-files-found: error
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          pattern: digest-*
-          path: /tmp/digests
-          merge-multiple: true
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Extract metadata for tags
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: docmost/docmost
-          tags: |
-            type=semver,pattern={{version}},value=${{ env.VERSION }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ env.VERSION }},enable=${{ !contains(env.VERSION, '-') }}
-            type=raw,value=latest,enable=${{ !contains(env.VERSION, '-') }}
-
-      - name: Create manifest list and push
-        working-directory: /tmp/digests
-        run: |
-          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf 'docmost/docmost@sha256:%s ' *)
-
-      - name: Download image archives
-        uses: actions/download-artifact@v4
-        with:
-          pattern: docker-image-*
-          path: /tmp/images
-          merge-multiple: true
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.VERSION }}
-          files: |
-            /tmp/images/docmost-amd64.docker.tar.gz
-            /tmp/images/docmost-arm64.docker.tar.gz
-          draft: true
-
-
-  ghcr-build:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    strategy:
-      matrix:
-        include:
-          - platform: linux/amd64
-            runner: ubuntu-latest
-            suffix: amd64
-          - platform: linux/arm64
-            runner: ubuntu-24.04-arm
-            suffix: arm64
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -199,8 +61,8 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=gha,scope=ghcr-${{ matrix.suffix }}
-          cache-to: type=gha,scope=ghcr-${{ matrix.suffix }},mode=max
+          cache-from: type=gha,scope=${{ matrix.suffix }}
+          cache-to: type=gha,scope=${{ matrix.suffix }},mode=max
 
       - name: Export digest
         run: |
@@ -211,19 +73,48 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: ghcr-digest-${{ matrix.suffix }}
+          name: digest-${{ matrix.suffix }}
           path: /tmp/digests/*
           if-no-files-found: error
 
-  ghcr-publish:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: ghcr-build
+      - name: Strip v prefix
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        id: strip-v
+        run: echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Export Docker image
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: false
+          tags: |
+            ${{ steps.image.outputs.name }}:latest
+            ${{ steps.image.outputs.name }}:${{ steps.strip-v.outputs.version }}
+          outputs: type=docker,dest=docmost-${{ matrix.suffix }}.docker.tar
+          cache-from: type=gha,scope=${{ matrix.suffix }}
+
+      - name: Compress image
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        run: gzip docmost-${{ matrix.suffix }}.docker.tar
+
+      - name: Upload image archive
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-${{ matrix.suffix }}
+          path: docmost-${{ matrix.suffix }}.docker.tar.gz
+          if-no-files-found: error
+
+  publish:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4
         with:
-          pattern: ghcr-digest-*
+          pattern: digest-*
           path: /tmp/digests
           merge-multiple: true
 
@@ -241,9 +132,41 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create manifest list and push commit tag
+      - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create \
-            -t "${{ steps.image.outputs.name }}:${{ github.sha }}" \
-            $(printf '${{ steps.image.outputs.name }}@sha256:%s ' *)
+          image="${{ steps.image.outputs.name }}"
+          version="${VERSION#v}"
+          tags=(-t "${image}:${{ github.sha }}")
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" || "${GITHUB_REF}" == refs/tags/v* ]]; then
+            tags+=(-t "${image}:${version}")
+            if [[ "${version}" != *-* ]]; then
+              tags+=(-t "${image}:latest")
+              tags+=(-t "${image}:${version%.*}")
+            fi
+          fi
+
+          docker buildx imagetools create "${tags[@]}" \
+            $(printf "${image}@sha256:%s " *)
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download image archives
+        uses: actions/download-artifact@v4
+        with:
+          pattern: docker-image-*
+          path: /tmp/images
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          files: |
+            /tmp/images/docmost-amd64.docker.tar.gz
+            /tmp/images/docmost-arm64.docker.tar.gz
+          draft: true

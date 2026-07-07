@@ -59,18 +59,3 @@ Special thanks to;
 <img width="48" alt="Algolia-mark-square-white" src="https://github.com/user-attachments/assets/6ccad04a-9589-4965-b6a1-d5cb1f4f9e94" />
 
 [Algolia](https://www.algolia.com/) for providing full-text search to the docs.
-
-
-## GHCR Docker images
-
-The existing release workflow still builds the official `docmost/docmost` Docker Hub image for tagged releases. It also publishes a fork-friendly GHCR image on pushes to `main`, using the same repository `Dockerfile`, native `linux/amd64` and `linux/arm64` builds, and a manifest list so the resulting image keeps the same runtime contract as the upstream image: the app listens on port `3000`, stores uploaded files in `/app/data/storage`, and starts with `pnpm start`.
-
-Images are tagged only with the full 40-character commit SHA for reproducibility:
-
-```yaml
-services:
-  docmost:
-    image: ghcr.io/<owner>/<repo>:<full-commit-sha>
-```
-
-You can replace `docmost/docmost:<version>` in the upstream compose file with the GHCR image tag above while keeping the same environment variables, ports, and volume mount.
