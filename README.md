@@ -60,3 +60,17 @@ Special thanks to;
 
 [Algolia](https://www.algolia.com/) for providing full-text search to the docs.
 
+
+## GHCR Docker images
+
+This fork publishes a Docker image to GitHub Container Registry on every branch push and on manual workflow runs. The image uses the repository `Dockerfile`, so it keeps the same runtime contract as the upstream `docmost/docmost` image: the app listens on port `3000`, stores uploaded files in `/app/data/storage`, and starts with `pnpm start`.
+
+Images are tagged only with the full 40-character commit SHA for reproducibility:
+
+```yaml
+services:
+  docmost:
+    image: ghcr.io/<owner>/<repo>:<full-commit-sha>
+```
+
+You can replace `docmost/docmost:<version>` in the upstream compose file with the GHCR image tag above while keeping the same environment variables, ports, and volume mount.
