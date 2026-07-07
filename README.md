@@ -63,7 +63,7 @@ Special thanks to;
 
 ## GHCR Docker images
 
-This fork publishes a Docker image to GitHub Container Registry on every branch push and on manual workflow runs. The image uses the repository `Dockerfile`, so it keeps the same runtime contract as the upstream `docmost/docmost` image: the app listens on port `3000`, stores uploaded files in `/app/data/storage`, and starts with `pnpm start`.
+The upstream repository already has a release workflow that builds the official `docmost/docmost` Docker Hub image. This fork keeps that workflow intact and adds a GHCR workflow for forks that do not have the upstream Docker Hub release secrets. The GHCR workflow uses the same repository `Dockerfile`, native `linux/amd64` and `linux/arm64` builds, and a manifest list so the resulting image keeps the same runtime contract as the upstream image: the app listens on port `3000`, stores uploaded files in `/app/data/storage`, and starts with `pnpm start`.
 
 Images are tagged only with the full 40-character commit SHA for reproducibility:
 
