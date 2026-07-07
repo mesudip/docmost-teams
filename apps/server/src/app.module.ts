@@ -29,17 +29,38 @@ import { NoopAuditModule } from './integrations/audit/audit.module';
 import { ThrottleModule } from './integrations/throttle/throttle.module';
 
 const enterpriseModules = [];
+let loadedEnterpriseModule = false;
+
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  if (require('./ee/ee.module')?.EeModule) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    enterpriseModules.push(require('./ee/ee.module')?.EeModule);
+  const eeModule = require('./ee/ee.module')?.EeModule;
+  if (eeModule) {
+    enterpriseModules.push(eeModule);
+    loadedEnterpriseModule = true;
   }
 } catch (err) {
   if (process.env.CLOUD === 'true') {
-    console.warn('Failed to load enterprise modules. Exiting program.\n', err);
-    process.exit(1);
+    console.warn('Failed to load upstream enterprise modules.\n', err);
   }
+}
+
+try {
+  // Local teams EE module keeps custom extensions outside the upstream EE submodule.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const teamsEeModule = require('./teams/ee.module')?.EeModule;
+  if (teamsEeModule) {
+    enterpriseModules.push(teamsEeModule);
+    loadedEnterpriseModule = true;
+  }
+} catch (err) {
+  if (process.env.CLOUD === 'true') {
+    console.warn('Failed to load teams enterprise modules.\n', err);
+  }
+}
+
+if (process.env.CLOUD === 'true' && !loadedEnterpriseModule) {
+  console.warn('Failed to load enterprise modules. Exiting program.');
+  process.exit(1);
 }
 
 @Module({
