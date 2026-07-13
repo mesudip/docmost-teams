@@ -99,10 +99,12 @@ export class SpaceMemberService {
     authUser: User,
     workspaceId: string,
   ): Promise<void> {
-
     const space = await this.spaceRepo.findById(dto.spaceId, workspaceId);
     if (!space) {
       throw new NotFoundException('Space not found');
+    }
+    if (space.isPersonal) {
+      throw new BadRequestException('Private spaces cannot be shared');
     }
 
     // make sure we have valid workspace users
@@ -222,6 +224,11 @@ export class SpaceMemberService {
     if (!space) {
       throw new NotFoundException('Space not found');
     }
+    if (space.isPersonal) {
+      throw new BadRequestException(
+        'Private space membership cannot be changed',
+      );
+    }
 
     let spaceMember: SpaceMember = null;
 
@@ -307,6 +314,11 @@ export class SpaceMemberService {
     const space = await this.spaceRepo.findById(dto.spaceId, workspaceId);
     if (!space) {
       throw new NotFoundException('Space not found');
+    }
+    if (space.isPersonal) {
+      throw new BadRequestException(
+        'Private space membership cannot be changed',
+      );
     }
 
     let spaceMember: SpaceMember = null;

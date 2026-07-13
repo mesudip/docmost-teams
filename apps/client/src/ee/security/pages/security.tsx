@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { getAppName, isCloud } from "@/lib/config.ts";
+import { getAppName } from "@/lib/config.ts";
 import SettingsTitle from "@/components/settings/settings-title.tsx";
 import {
   Alert,
@@ -86,7 +86,7 @@ export default function Security() {
       <EnforceSso />
       <Divider my="lg" />
 
-      {(isCloud() || hasCustomSso) && (
+      {hasCustomSso && (
         <>
           <AllowedDomains />
           <Divider my="lg" />
@@ -102,98 +102,94 @@ export default function Security() {
 
       <SsoProviderList />
 
-      {hasScim && (
+      <Divider my="xl" />
+
+      <Title order={4} my="lg">
+        {t("SCIM provisioning")}
+      </Title>
+
+      <Alert
+        icon={<IconInfoCircle size={16} />}
+        color="blue"
+        variant="light"
+        mb="md"
+      >
+        {t("SCIM takes precedence over SSO group sync while enabled.")}
+      </Alert>
+
+      <EnableScim />
+
+      {hasScim && isScimEnabled && (
         <>
-          <Divider my="xl" />
-
-          <Title order={4} my="lg">
-            {t("SCIM provisioning")}
-          </Title>
-
-          <Alert
-            icon={<IconInfoCircle size={16} />}
-            color="blue"
-            variant="light"
-            mb="md"
-          >
-            {t("SCIM takes precedence over SSO group sync while enabled.")}
-          </Alert>
-
-          <EnableScim />
-
           <Divider my="lg" />
 
           <ScimUrlPanel />
 
-          {isScimEnabled && (
-            <>
-              <Divider my="lg" />
+          <Divider my="lg" />
 
-              <Group justify="space-between" mb="md">
-                <Title order={5}>{t("SCIM tokens")}</Title>
-                <Tooltip
-                  label={t(
-                    "You have reached the maximum of {{max}} SCIM tokens. Delete an existing token to create a new one.",
-                    { max: SCIM_TOKEN_LIMIT },
-                  )}
-                  disabled={(scimData?.items.length ?? 0) < SCIM_TOKEN_LIMIT}
-                >
-                  <Button
-                    onClick={() => setCreateOpen(true)}
-                    disabled={(scimData?.items.length ?? 0) >= SCIM_TOKEN_LIMIT}
-                  >
-                    {t("Create {{credential}}", {
-                      credential: t("SCIM token"),
-                    })}
-                  </Button>
-                </Tooltip>
-              </Group>
-
-              <Card shadow="sm" radius="sm">
-                <ScimTokenTable
-                  tokens={scimData?.items}
-                  isLoading={scimLoading}
-                  onUpdate={setUpdateTarget}
-                  onRevoke={setRevokeTarget}
-                />
-              </Card>
-
-              <Space h="md" />
-
-              {scimData?.items.length > 0 && (
-                <Paginate
-                  hasPrevPage={scimData?.meta?.hasPrevPage}
-                  hasNextPage={scimData?.meta?.hasNextPage}
-                  onNext={() => goNext(scimData?.meta?.nextCursor)}
-                  onPrev={goPrev}
-                />
+          <Group justify="space-between" mb="md">
+            <Title order={5}>{t("SCIM tokens")}</Title>
+            <Tooltip
+              label={t(
+                "You have reached the maximum of {{max}} SCIM tokens. Delete an existing token to create a new one.",
+                { max: SCIM_TOKEN_LIMIT },
               )}
+              disabled={(scimData?.items.length ?? 0) < SCIM_TOKEN_LIMIT}
+            >
+              <Button
+                onClick={() => setCreateOpen(true)}
+                disabled={(scimData?.items.length ?? 0) >= SCIM_TOKEN_LIMIT}
+              >
+                {t("Create {{credential}}", {
+                  credential: t("SCIM token"),
+                })}
+              </Button>
+            </Tooltip>
+          </Group>
 
-              <CreateScimTokenModal
-                opened={createOpen}
-                onClose={() => setCreateOpen(false)}
-                onSuccess={setCreatedToken}
-              />
+          <Card shadow="sm" radius="sm">
+            <ScimTokenTable
+              tokens={scimData?.items}
+              isLoading={scimLoading}
+              onUpdate={setUpdateTarget}
+              onRevoke={setRevokeTarget}
+            />
+          </Card>
 
-              <ScimTokenCreatedModal
-                opened={!!createdToken}
-                onClose={() => setCreatedToken(null)}
-                scimToken={createdToken}
-              />
+          <Space h="md" />
 
-              <UpdateScimTokenModal
-                opened={!!updateTarget}
-                onClose={() => setUpdateTarget(null)}
-                scimToken={updateTarget}
-              />
-
-              <RevokeScimTokenModal
-                opened={!!revokeTarget}
-                onClose={() => setRevokeTarget(null)}
-                scimToken={revokeTarget}
-              />
-            </>
+          {scimData?.items.length > 0 && (
+            <Paginate
+              hasPrevPage={scimData?.meta?.hasPrevPage}
+              hasNextPage={scimData?.meta?.hasNextPage}
+              onNext={() => goNext(scimData?.meta?.nextCursor)}
+              onPrev={goPrev}
+            />
           )}
+
+          <CreateScimTokenModal
+            opened={createOpen}
+            onClose={() => setCreateOpen(false)}
+            onSuccess={setCreatedToken}
+          />
+
+          <ScimTokenCreatedModal
+            opened={!!createdToken}
+            onClose={() => setCreatedToken(null)}
+            scimToken={createdToken}
+          />
+
+          <UpdateScimTokenModal
+            opened={!!updateTarget}
+            onClose={() => setUpdateTarget(null)}
+            scimToken={updateTarget}
+          />
+
+          <RevokeScimTokenModal
+            opened={!!revokeTarget}
+            onClose={() => setRevokeTarget(null)}
+            scimToken={revokeTarget}
+          />
         </>
       )}
     </>

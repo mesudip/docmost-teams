@@ -9,12 +9,13 @@ import { useDisclosure } from "@mantine/hooks";
 import { useAtom } from "jotai";
 import { entitlementAtom } from "@/ee/entitlement/entitlement-atom";
 import RemoveLicense from "@/ee/licence/components/remove-license.tsx";
+import { hasPaidLicenseTier } from "@/ee/entitlement/tier.utils";
 
 export default function ActivateLicense() {
   const { t } = useTranslation();
   const [opened, { open, close }] = useDisclosure(false);
   const [entitlements] = useAtom(entitlementAtom);
-  const hasLicense = entitlements != null && entitlements.tier !== "free";
+  const hasLicense = hasPaidLicenseTier(entitlements?.tier);
 
   return (
     <Group justify="flex-end" wrap="nowrap" mb="sm">

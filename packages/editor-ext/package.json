@@ -4,13 +4,17 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "tsc --build",
-    "dev": "tsc --watch"
+    "build": "pnpm exec tsc --build",
+    "dev": "pnpm exec tsc --watch"
   },
   "main": "dist/index.js",
   "module": "./src/index.ts",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "marked": "17.0.5"
+    "marked": "17.0.5",
+    "nanoid": "3.3.8"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
   }
 }

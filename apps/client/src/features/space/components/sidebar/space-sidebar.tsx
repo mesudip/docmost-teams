@@ -104,6 +104,7 @@ export function SpaceSidebar() {
               spaceName={space?.name}
               spaceSlug={space?.slug}
               spaceIcon={space?.logo}
+              isPersonal={space?.isPersonal}
             />
           </Group>
         </div>

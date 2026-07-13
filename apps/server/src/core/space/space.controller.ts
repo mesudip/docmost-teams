@@ -33,7 +33,7 @@ import {
   WorkspaceCaslSubject,
 } from '../casl/interfaces/workspace-ability.type';
 import WorkspaceAbilityFactory from '../casl/abilities/workspace-ability.factory';
-import { CreateSpaceDto } from './dto/create-space.dto';
+import { CreatePrivateSpaceDto, CreateSpaceDto } from './dto/create-space.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('spaces')
@@ -141,6 +141,36 @@ export class SpaceController {
       throw new ForbiddenException();
     }
     return this.spaceService.createSpace(user, workspace.id, createSpaceDto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('private/create')
+  async createPrivateSpace(
+    @Body() dto: CreatePrivateSpaceDto,
+    @AuthUser() user: User,
+    @AuthWorkspace() workspace: Workspace,
+  ) {
+    const ability = this.workspaceAbility.createForUser(user, workspace);
+    if (
+      ability.cannot(
+        WorkspaceCaslAction.Create,
+        WorkspaceCaslSubject.PrivateSpace,
+      )
+    ) {
+      throw new ForbiddenException();
+    }
+
+    const allowPersonalSpaces =
+      (workspace.settings as Record<string, any>)?.spaces?.allowPersonal ===
+      true;
+
+    if (!allowPersonalSpaces) {
+      throw new ForbiddenException(
+        'Private spaces are disabled in this workspace',
+      );
+    }
+
+    return this.spaceService.createPrivateSpace(user, workspace.id, dto.name);
   }
 
   @HttpCode(HttpStatus.OK)

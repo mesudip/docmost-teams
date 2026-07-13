@@ -2,7 +2,15 @@ import React from "react";
 import { z } from "zod/v4";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { Box, Button, Group, Stack, Switch, TextInput } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Group,
+  Stack,
+  Switch,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { buildCallbackUrl } from "@/ee/security/sso.utils.ts";
 import classes from "@/ee/security/components/sso.module.css";
 import { IAuthProvider } from "@/ee/security/types/security.types.ts";
@@ -14,7 +22,9 @@ const ssoSchema = z.object({
   name: z.string().min(1, "Display name is required"),
   oidcIssuer: z.string().url(),
   oidcClientId: z.string().min(1, "Client id is required"),
-  oidcClientSecret: z.string().min(1, "Client secret is required"),
+  oidcClientSecret: z.string(),
+  groupClaimName: z.string().trim().min(1, "Group claim name is required"),
+  requireVerifiedEmail: z.boolean(),
   isEnabled: z.boolean(),
   allowSignup: z.boolean(),
   groupSync: z.boolean(),
@@ -36,6 +46,8 @@ export function SsoOIDCForm({ provider, onClose }: SsoFormProps) {
       oidcIssuer: provider.oidcIssuer || "",
       oidcClientId: provider.oidcClientId || "",
       oidcClientSecret: provider.oidcClientSecret || "",
+      groupClaimName: provider.settings?.groupClaimName || "groups",
+      requireVerifiedEmail: provider.settings?.requireVerifiedEmail ?? true,
       isEnabled: provider.isEnabled,
       allowSignup: provider.allowSignup,
       groupSync: provider.groupSync || false,
@@ -61,8 +73,23 @@ export function SsoOIDCForm({ provider, onClose }: SsoFormProps) {
     if (form.isDirty("oidcClientId")) {
       ssoData.oidcClientId = values.oidcClientId;
     }
-    if (form.isDirty("oidcClientSecret")) {
-      ssoData.oidcClientSecret = values.oidcClientSecret;
+    if (
+      form.isDirty("oidcClientSecret") &&
+      values.oidcClientSecret.trim().length > 0
+    ) {
+      ssoData.oidcClientSecret = values.oidcClientSecret.trim();
+    }
+    if (form.isDirty("groupClaimName")) {
+      ssoData.settings = {
+        ...(provider.settings || {}),
+        groupClaimName: values.groupClaimName,
+      };
+    }
+    if (form.isDirty("requireVerifiedEmail")) {
+      ssoData.settings = {
+        ...(ssoData.settings || provider.settings || {}),
+        requireVerifiedEmail: values.requireVerifiedEmail,
+      };
     }
     if (form.isDirty("isEnabled")) {
       ssoData.isEnabled = values.isEnabled;
@@ -111,9 +138,24 @@ export function SsoOIDCForm({ provider, onClose }: SsoFormProps) {
           />
           <TextInput
             label="Client Secret"
-            description="Enter your OIDC Client Secret"
-            placeholder="e.g OCSPX-zVCkotEPGRnJA1XKUrbgjlf7PQQ-"
+            description={
+              provider.hasOidcClientSecret
+                ? "A secret is stored. Leave this blank to keep it unchanged."
+                : "Enter your OIDC client secret"
+            }
+            placeholder={
+              provider.hasOidcClientSecret
+                ? "Stored secret"
+                : "e.g OCSPX-zVCkotEPGRnJA1XKUrbgjlf7PQQ-"
+            }
+            type="password"
             {...form.getInputProps("oidcClientSecret")}
+          />
+          <TextInput
+            label={t("Group claim name")}
+            description={t("OIDC claim used for group sync")}
+            placeholder="groups"
+            {...form.getInputProps("groupClaimName")}
           />
 
           <Group justify="space-between">
@@ -131,6 +173,22 @@ export function SsoOIDCForm({ provider, onClose }: SsoFormProps) {
               className={classes.switch}
               checked={form.values.allowSignup}
               {...form.getInputProps("allowSignup")}
+            />
+          </Group>
+
+          <Group justify="space-between" align="flex-start">
+            <div>
+              <div>{t("Require verified email claim")}</div>
+              <Text size="xs" c="dimmed">
+                {t(
+                  "Disable this only when the identity provider verifies email addresses itself.",
+                )}
+              </Text>
+            </div>
+            <Switch
+              className={classes.switch}
+              checked={form.values.requireVerifiedEmail}
+              {...form.getInputProps("requireVerifiedEmail")}
             />
           </Group>
 

@@ -8,7 +8,8 @@ export interface IAuthProvider {
   samlCertificate: string;
   oidcIssuer: string;
   oidcClientId: string;
-  oidcClientSecret: string;
+  oidcClientSecret?: string;
+  hasOidcClientSecret: boolean;
   ldapUrl: string;
   ldapBindDn: string;
   ldapBindPassword: string;
@@ -26,4 +27,8 @@ export interface IAuthProvider {
   updatedAt: Date;
   deletedAt: Date;
   providerId: string;
+  settings?: {
+    groupClaimName?: string;
+    requireVerifiedEmail?: boolean;
+  };
 }

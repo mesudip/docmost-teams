@@ -4,7 +4,15 @@
 data
 # compiled output
 dist
-/node_modules
+node_modules/
+
+# Local development and browser-tool artifacts
+/.local-dev/
+/.playwright-mcp/
+
+# Python caches
+__pycache__/
+*.py[cod]
 
 # Logs
 logs

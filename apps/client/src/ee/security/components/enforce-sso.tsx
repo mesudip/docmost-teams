@@ -1,7 +1,7 @@
 import { Group, Text, Switch, MantineSize, Tooltip } from "@mantine/core";
 import { useAtom } from "jotai";
 import { workspaceAtom } from "@/features/user/atoms/current-user-atom.ts";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 import { notifications } from "@mantine/notifications";
@@ -35,9 +35,13 @@ interface EnforceSsoToggleProps {
 export function EnforceSsoToggle({ size, label }: EnforceSsoToggleProps) {
   const { t } = useTranslation();
   const [workspace, setWorkspace] = useAtom(workspaceAtom);
-  const [checked, setChecked] = useState(workspace?.enforceSso);
+  const [checked, setChecked] = useState(workspace?.enforceSso === true);
   const hasAccess = useHasFeature(Feature.SSO_CUSTOM);
   const upgradeLabel = useUpgradeLabel();
+
+  useEffect(() => {
+    setChecked(workspace?.enforceSso === true);
+  }, [workspace?.enforceSso]);
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.currentTarget.checked;
@@ -59,7 +63,7 @@ export function EnforceSsoToggle({ size, label }: EnforceSsoToggleProps) {
         size={size}
         label={label}
         labelPosition="left"
-        defaultChecked={checked}
+        checked={checked}
         onChange={handleChange}
         disabled={!hasAccess}
         aria-label={t("Toggle sso enforcement")}

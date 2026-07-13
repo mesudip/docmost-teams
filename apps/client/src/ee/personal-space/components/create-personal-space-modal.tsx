@@ -26,7 +26,8 @@ export default function CreatePersonalSpaceModal({ opened, onClose }: Props) {
   const currentUser = useAtomValue(currentUserAtom);
   const createMutation = useCreatePersonalSpaceMutation();
 
-  const firstName = (currentUser?.user?.name ?? "").trim().split(/\s+/)[0] || "";
+  const firstName =
+    (currentUser?.user?.name ?? "").trim().split(/\s+/)[0] || "";
 
   const form = useForm<FormValues>({
     validate: zod4Resolver(formSchema),
@@ -54,7 +55,7 @@ export default function CreatePersonalSpaceModal({ opened, onClose }: Props) {
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t("Create personal space")}
+      title={t("Create private space")}
       closeButtonProps={{ "aria-label": t("Close") }}
     >
       <Divider size="xs" mb="md" />
