@@ -80,7 +80,12 @@ const groupedData: DataGroup[] = [
   {
     heading: "Workspace",
     items: [
-      { label: "General", icon: IconSettings, path: "/settings/workspace" },
+      {
+        label: "General",
+        icon: IconSettings,
+        path: "/settings/workspace",
+        role: "admin",
+      },
       { label: "Members", icon: IconUsers, path: "/settings/members" },
       {
         label: "Billing",

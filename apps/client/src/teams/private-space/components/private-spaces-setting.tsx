@@ -15,9 +15,9 @@ export default function PersonalSpacesSetting() {
   return (
     <Group justify="space-between" wrap="nowrap" gap="xl">
       <div>
-        <Text size="md">{t("Allow private spaces")}</Text>
+        <Text size="md">{t("Allow personal spaces")}</Text>
         <Text size="sm" c="dimmed">
-          {t("Members can create their own private spaces.")}
+          {t("Members can create their own personal spaces.")}
         </Text>
       </div>
 
@@ -65,7 +65,7 @@ function PersonalSpacesToggle() {
         checked={checked}
         onChange={handleChange}
         disabled={!hasPersonalSpaces}
-        aria-label={t("Toggle allow private spaces")}
+        aria-label={t("Toggle allow personal spaces")}
       />
     </Tooltip>
   );

@@ -18,7 +18,6 @@ import {
   IconUserCircle,
   IconUsers,
 } from "@tabler/icons-react";
-import { PrivateSpaceMenuItem } from "@/teams/private-space/components/private-space-menu-item";
 import { useAtom } from "jotai";
 import { currentUserAtom } from "@/features/user/atoms/current-user-atom.ts";
 import { Link } from "react-router-dom";
@@ -115,8 +114,6 @@ export default function TopMenu() {
         >
           {t("My preferences")}
         </Menu.Item>
-
-        <PrivateSpaceMenuItem />
 
         <Menu.Sub>
           <Menu.Sub.Target>

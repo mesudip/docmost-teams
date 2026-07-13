@@ -10,9 +10,17 @@ import WorkspaceDefaultPageEditMode from "@/features/workspace/components/settin
 import PersonalSpacesSetting from "@/teams/private-space/components/private-spaces-setting.tsx";
 import AllowPublicSpaces from "@/features/workspace/components/settings/components/allow-public-spaces.tsx";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import useUserRole from "@/hooks/use-user-role.tsx";
+import { Navigate } from "react-router-dom";
 
 export default function WorkspaceSettings() {
   const { t } = useTranslation();
+  const { isAdmin } = useUserRole();
+
+  if (!isAdmin) {
+    return <Navigate to="/settings/account/profile" replace />;
+  }
+
   return (
     <>
       <DocumentTitle title="Workspace Settings" />

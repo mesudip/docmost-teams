@@ -1,4 +1,5 @@
-import { Modal, TextInput, Button, Group, Divider } from "@mantine/core";
+import { Alert, Modal, TextInput, Button, Group, Divider } from "@mantine/core";
+import { IconLock } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { z } from "zod/v4";
@@ -20,7 +21,7 @@ type Props = {
   onClose: () => void;
 };
 
-export default function CreatePersonalSpaceModal({ opened, onClose }: Props) {
+export function PrivateSpaceForm({ onCreated }: { onCreated: () => void }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const currentUser = useAtomValue(currentUserAtom);
@@ -41,7 +42,7 @@ export default function CreatePersonalSpaceModal({ opened, onClose }: Props) {
       const createdSpace = await createMutation.mutateAsync({
         name: values.name,
       });
-      onClose();
+      onCreated();
       navigate(getSpaceUrl(createdSpace.slug));
     } catch (err) {
       notifications.show({
@@ -52,28 +53,44 @@ export default function CreatePersonalSpaceModal({ opened, onClose }: Props) {
   };
 
   return (
+    <form onSubmit={form.onSubmit(handleSubmit)}>
+      <Alert
+        icon={<IconLock size={16} />}
+        title={t("Personal space")}
+        color="gray"
+        mb="md"
+      >
+        {t("Only you can access this space.")}
+      </Alert>
+      <TextInput
+        withAsterisk
+        data-autofocus
+        label={t("Space name")}
+        variant="filled"
+        errorProps={{ role: "alert" }}
+        {...form.getInputProps("name")}
+      />
+      <Group justify="flex-end" mt="md">
+        <Button type="submit" loading={createMutation.isPending}>
+          {t("Create")}
+        </Button>
+      </Group>
+    </form>
+  );
+}
+
+export default function CreatePersonalSpaceModal({ opened, onClose }: Props) {
+  const { t } = useTranslation();
+
+  return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t("Create private space")}
+      title={t("Create personal space")}
       closeButtonProps={{ "aria-label": t("Close") }}
     >
       <Divider size="xs" mb="md" />
-      <form onSubmit={form.onSubmit(handleSubmit)}>
-        <TextInput
-          withAsterisk
-          data-autofocus
-          label={t("Space name")}
-          variant="filled"
-          errorProps={{ role: "alert" }}
-          {...form.getInputProps("name")}
-        />
-        <Group justify="flex-end" mt="md">
-          <Button type="submit" loading={createMutation.isPending}>
-            {t("Create")}
-          </Button>
-        </Group>
-      </form>
+      <PrivateSpaceForm onCreated={onClose} />
     </Modal>
   );
 }
