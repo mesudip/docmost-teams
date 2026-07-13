@@ -7,6 +7,7 @@ import {
 import { SpaceRole, UserRole } from '../../../common/helpers/types/permission';
 import { User } from '@docmost/db/types/entity.types';
 import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
+import { SpaceRepo } from '@docmost/db/repos/space/space.repo';
 import {
   SpaceCaslAction,
   ISpaceAbility,
@@ -16,9 +17,24 @@ import { findHighestUserSpaceRole } from '@docmost/db/repos/space/utils';
 
 @Injectable()
 export default class SpaceAbilityFactory {
-  constructor(private readonly spaceMemberRepo: SpaceMemberRepo) {}
+  constructor(
+    private readonly spaceMemberRepo: SpaceMemberRepo,
+    private readonly spaceRepo: SpaceRepo,
+  ) {}
+
   async createForUser(user: User, spaceId: string) {
-    if (user.role === UserRole.OWNER) {
+    const space = await this.spaceRepo.findById(spaceId, user.workspaceId);
+    if (!space) {
+      throw new NotFoundException('Space permissions not found');
+    }
+
+    if (space.isPersonal && space.creatorId !== user.id) {
+      throw new NotFoundException('Space permissions not found');
+    }
+
+    // Personal spaces are private to their creator. Workspace ownership,
+    // including ownership granted through the Root SSO group, never bypasses this.
+    if (user.role === UserRole.OWNER && !space.isPersonal) {
       return buildSpaceAdminAbility();
     }
 
@@ -29,16 +45,20 @@ export default class SpaceAbilityFactory {
 
     const userSpaceRole = findHighestUserSpaceRole(userSpaceRoles);
 
-    switch (userSpaceRole) {
-      case SpaceRole.ADMIN:
-        return buildSpaceAdminAbility();
-      case SpaceRole.WRITER:
-        return buildSpaceWriterAbility();
-      case SpaceRole.READER:
-        return buildSpaceReaderAbility();
-      default:
-        throw new NotFoundException('Space permissions not found');
-    }
+    return buildAbilityForRole(userSpaceRole);
+  }
+}
+
+function buildAbilityForRole(userSpaceRole: string | undefined) {
+  switch (userSpaceRole) {
+    case SpaceRole.ADMIN:
+      return buildSpaceAdminAbility();
+    case SpaceRole.WRITER:
+      return buildSpaceWriterAbility();
+    case SpaceRole.READER:
+      return buildSpaceReaderAbility();
+    default:
+      throw new NotFoundException('Space permissions not found');
   }
 }
 

@@ -42,8 +42,9 @@ Keep these decisions when resolving upstream conflicts:
   should contain only thin imports or rendering seams.
 - Private-space membership cannot be added, removed, or role-edited through
   the ordinary space-member endpoints.
-- Workspace owners have administrative access to every space, including
-  private spaces, and the `Root` OIDC group promotes users to owner.
+- Workspace owners have administrative access to every ordinary workspace
+  space. Personal spaces are accessible only to their direct members; this
+  also applies to owners promoted through the `Root` OIDC group.
 - `LicenseCheckService` exposes `TEAMS_FEATURES` for self-hosted installs.
 - `.github/workflows/release.yml` publishes tagged multi-architecture images
   to this fork's GHCR namespace and must not be replaced by upstream's

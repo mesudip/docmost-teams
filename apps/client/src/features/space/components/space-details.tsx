@@ -18,7 +18,7 @@ import {
   ResponsiveSettingsControl,
   ResponsiveSettingsRow,
 } from "@/components/ui/responsive-settings-row.tsx";
-
+import { PersonalSpaceConversion } from "@/teams/private-space/components/personal-space-conversion";
 
 interface SpaceDetailsProps {
   spaceId: string;
@@ -90,6 +90,8 @@ export default function SpaceDetails({ spaceId, readOnly }: SpaceDetailsProps) {
 
           {!readOnly && (
             <>
+              <PersonalSpaceConversion space={space} />
+
               <Divider my="lg" />
 
               <ResponsiveSettingsRow>

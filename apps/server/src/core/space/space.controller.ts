@@ -57,13 +57,31 @@ export class SpaceController {
   ) {
     const isOwner = user.role === UserRole.OWNER;
     const result = isOwner
-      ? await this.spaceService.getWorkspaceSpaces(workspace.id, pagination)
+      ? await this.spaceService.getWorkspaceSpaces(
+          workspace.id,
+          user.id,
+          pagination,
+        )
       : await this.spaceMemberService.getUserSpaces(user.id, pagination);
 
     if (isOwner) {
+      const personalSpaceIds = result.items
+        .filter((space) => space.isPersonal)
+        .map((space) => space.id);
+      const personalRoles = await this.spaceMemberRepo.getUserRolesForSpaces(
+        user.id,
+        personalSpaceIds,
+      );
+      const roleMap = new Map(
+        personalRoles.map((role) => [role.spaceId, role.role]),
+      );
+
       result.items = result.items.map((space) => ({
         ...space,
-        membership: { userId: user.id, role: SpaceRole.ADMIN },
+        membership: {
+          userId: user.id,
+          role: space.isPersonal ? roleMap.get(space.id) : SpaceRole.ADMIN,
+        },
       }));
       return result;
     }
@@ -127,7 +145,7 @@ export class SpaceController {
     );
 
     const userSpaceRole =
-      user.role === UserRole.OWNER
+      user.role === UserRole.OWNER && !space.isPersonal
         ? SpaceRole.ADMIN
         : findHighestUserSpaceRole(userSpaceRoles);
 

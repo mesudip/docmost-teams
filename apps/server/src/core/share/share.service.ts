@@ -46,8 +46,13 @@ export class ShareService {
       throw new NotFoundException('Share not found');
     }
 
-    const isRestricted =
-      await this.pagePermissionRepo.hasRestrictedAncestor(share.pageId);
+    if (!(await this.isSharingAllowed(workspaceId, share.spaceId))) {
+      throw new NotFoundException('Share not found');
+    }
+
+    const isRestricted = await this.pagePermissionRepo.hasRestrictedAncestor(
+      share.pageId,
+    );
     if (isRestricted) {
       throw new NotFoundException('Share not found');
     }
@@ -126,8 +131,9 @@ export class ShareService {
     }
 
     // Block access to restricted pages
-    const isRestricted =
-      await this.pagePermissionRepo.hasRestrictedAncestor(page.id);
+    const isRestricted = await this.pagePermissionRepo.hasRestrictedAncestor(
+      page.id,
+    );
     if (isRestricted) {
       throw new NotFoundException('Shared page not found');
     }
@@ -200,6 +206,10 @@ export class ShareService {
     }
 
     if ((share.level as number) > 0 && !share.includeSubPages) {
+      return undefined;
+    }
+
+    if (!(await this.isSharingAllowed(workspaceId, share.spaceId))) {
       return undefined;
     }
 
@@ -401,6 +411,7 @@ export class ShareService {
       .select([
         'workspaces.settings as workspaceSettings',
         'spaces.settings as spaceSettings',
+        'spaces.isPersonal as isPersonal',
       ])
       .where('workspaces.id', '=', workspaceId)
       .where('spaces.id', '=', spaceId)
@@ -413,7 +424,7 @@ export class ShareService {
     const spaceDisabled =
       (result.spaceSettings as any)?.sharing?.disabled === true;
 
-    return !workspaceDisabled && !spaceDisabled;
+    return !result.isPersonal && !workspaceDisabled && !spaceDisabled;
   }
 
   async updatePublicAttachments(page: Page): Promise<any> {
