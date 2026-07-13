@@ -1,11 +1,17 @@
 import { Text, Tabs, Space } from "@mantine/core";
-import { IconClockHour3, IconStar, IconUser } from "@tabler/icons-react";
+import {
+  IconClockHour3,
+  IconLock,
+  IconStar,
+  IconUser,
+} from "@tabler/icons-react";
 import RecentChanges from "@/components/common/recent-changes";
 import FavoritesPages from "./favorites-pages";
 import CreatedByMe from "./created-by-me";
 import { useTranslation } from "react-i18next";
 import { useAtom } from "jotai";
 import { homeTabAtom } from "@/features/home/atoms/home-tab-atom";
+import { PersonalPages } from "@/teams/private-space/components/personal-pages";
 
 export default function HomeTabs() {
   const { t } = useTranslation();
@@ -35,6 +41,11 @@ export default function HomeTabs() {
             {t("Created by me")}
           </Text>
         </Tabs.Tab>
+        <Tabs.Tab value="personal" leftSection={<IconLock size={18} />}>
+          <Text size="sm" fw={500}>
+            {t("Personal")}
+          </Text>
+        </Tabs.Tab>
       </Tabs.List>
 
       <Space my="md" />
@@ -47,6 +58,9 @@ export default function HomeTabs() {
       </Tabs.Panel>
       <Tabs.Panel value="created">
         <CreatedByMe />
+      </Tabs.Panel>
+      <Tabs.Panel value="personal">
+        <PersonalPages />
       </Tabs.Panel>
     </Tabs>
   );

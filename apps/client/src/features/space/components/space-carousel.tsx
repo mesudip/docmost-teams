@@ -12,6 +12,7 @@ import { IconArrowRight } from "@tabler/icons-react";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
 import CardCarousel from "@/components/ui/card-carousel";
+import { PrivateSpaceIndicator } from "@/teams/private-space/components/private-space-indicator";
 
 function SpaceCardSkeleton() {
   return (
@@ -67,9 +68,12 @@ export default function SpaceCarousel() {
         mt={rem(-20)}
       />
 
-      <Text fz="md" fw={500} mt="xs" className={classes.title}>
-        {space.name}
-      </Text>
+      <Group gap={6} mt="xs" wrap="nowrap">
+        <Text fz="md" fw={500} className={classes.title}>
+          {space.name}
+        </Text>
+        <PrivateSpaceIndicator isPrivate={space.isPersonal} />
+      </Group>
 
       <Text c="dimmed" size="xs" fw={700} mt="md">
         {formatMemberCount(space.memberCount, t)}

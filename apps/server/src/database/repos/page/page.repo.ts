@@ -331,13 +331,28 @@ export class PageRepo {
     });
   }
 
-  async getRecentPages(userId: string, pagination: PaginationOptions) {
-    const query = this.db
+  async getRecentPages(
+    userId: string,
+    pagination: PaginationOptions,
+    personalOnly = false,
+  ) {
+    let query = this.db
       .selectFrom('pages')
       .select(this.baseFields)
       .select((eb) => this.withSpace(eb))
       .where('spaceId', 'in', this.spaceMemberRepo.getUserSpaceIdsQuery(userId))
       .where('deletedAt', 'is', null);
+
+    if (personalOnly) {
+      query = query.where(
+        'spaceId',
+        'in',
+        this.db
+          .selectFrom('spaces')
+          .select('id')
+          .where('isPersonal', '=', true),
+      );
+    }
 
     return executeWithCursorPagination(query, {
       perPage: pagination.limit,
@@ -354,7 +369,12 @@ export class PageRepo {
     });
   }
 
-  async getCreatedByPages(creatorId: string, requestingUserId: string, pagination: PaginationOptions, spaceId?: string) {
+  async getCreatedByPages(
+    creatorId: string,
+    requestingUserId: string,
+    pagination: PaginationOptions,
+    spaceId?: string,
+  ) {
     let query = this.db
       .selectFrom('pages')
       .select(this.baseFields)
@@ -365,7 +385,11 @@ export class PageRepo {
     if (spaceId) {
       query = query.where('spaceId', '=', spaceId);
     } else {
-      query = query.where('spaceId', 'in', this.spaceMemberRepo.getUserSpaceIdsQuery(requestingUserId));
+      query = query.where(
+        'spaceId',
+        'in',
+        this.spaceMemberRepo.getUserSpaceIdsQuery(requestingUserId),
+      );
     }
 
     return executeWithCursorPagination(query, {

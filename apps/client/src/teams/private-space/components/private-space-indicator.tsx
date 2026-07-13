@@ -14,7 +14,7 @@ export function PrivateSpaceIndicator({
   if (!isPrivate) return null;
 
   return (
-    <Tooltip label={t("Private space")} withArrow>
+    <Tooltip label={t("Personal space")} withArrow>
       <IconLock size={14} color="var(--mantine-color-gray-6)" />
     </Tooltip>
   );

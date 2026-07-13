@@ -9,9 +9,17 @@ import { Divider } from "@mantine/core";
 import AllowMemberTemplates from "@/ee/security/components/allow-member-templates.tsx";
 import WorkspaceDefaultPageEditMode from "@/features/workspace/components/settings/components/workspace-default-page-edit-mode.tsx";
 import PersonalSpacesSetting from "@/teams/private-space/components/private-spaces-setting.tsx";
+import useUserRole from "@/hooks/use-user-role.tsx";
+import { Navigate } from "react-router-dom";
 
 export default function WorkspaceSettings() {
   const { t } = useTranslation();
+  const { isAdmin } = useUserRole();
+
+  if (!isAdmin) {
+    return <Navigate to="/settings/account/profile" replace />;
+  }
+
   return (
     <>
       <Helmet>

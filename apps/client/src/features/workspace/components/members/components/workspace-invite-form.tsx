@@ -6,6 +6,7 @@ import { userRoleData } from "@/features/workspace/types/user-role-data.ts";
 import { useCreateInvitationMutation } from "@/features/workspace/queries/workspace-query.ts";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import useUserRole from "@/hooks/use-user-role";
 
 interface Props {
   onClose: () => void;
@@ -17,6 +18,7 @@ export function WorkspaceInviteForm({ onClose }: Props) {
   const [groupIds, setGroupIds] = useState<string[]>([]);
   const createInvitationMutation = useCreateInvitationMutation();
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
 
   async function handleSubmit() {
     const validEmails = emails.filter((email) => {
@@ -38,6 +40,8 @@ export function WorkspaceInviteForm({ onClose }: Props) {
   const handleGroupSelect = (value: string[]) => {
     setGroupIds(value);
   };
+
+  if (!isAdmin) return null;
 
   return (
     <>

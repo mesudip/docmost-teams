@@ -21,11 +21,19 @@ import rowClasses from "@/components/ui/clickable-table-row.module.css";
 
 interface Props {
   spaceId?: string;
+  personalOnly?: boolean;
 }
 
-export default function RecentChanges({ spaceId }: Props) {
+export default function RecentChanges({ spaceId, personalOnly }: Props) {
   const { t } = useTranslation();
-  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } = useRecentChangesQuery(spaceId);
+  const {
+    data,
+    isLoading,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useRecentChangesQuery(spaceId, { personalOnly });
   const pages = data?.pages.flatMap((p) => p.items) ?? [];
 
   if (isLoading) {
@@ -103,7 +111,11 @@ export default function RecentChanges({ spaceId }: Props) {
     <EmptyState
       icon={IconFiles}
       title={t("No pages yet")}
-      description={t("Pages you create will show up here.")}
+      description={
+        personalOnly
+          ? t("Pages in your personal spaces will show up here.")
+          : t("Pages you create will show up here.")
+      }
     />
   );
 }
