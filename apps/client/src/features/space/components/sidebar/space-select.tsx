@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useDebouncedValue } from "@mantine/hooks";
-import { Group, Select, SelectProps, Text, Tooltip } from "@mantine/core";
-import { IconLock } from "@tabler/icons-react";
+import { Group, Select, SelectProps, Text } from "@mantine/core";
 import { useGetSpacesQuery } from "@/features/space/queries/space-query.ts";
 import { ISpace } from "../../types/space.types";
 import { useTranslation } from "react-i18next";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
+import { PrivateSpaceIndicator } from "@/teams/private-space/components/private-space-indicator";
 
 interface SpaceSelectProps {
   onChange: (value: ISpace) => void;
@@ -31,11 +31,7 @@ const renderSelectOption: SelectProps["renderOption"] = ({ option }) => (
       <Text size="sm" lineClamp={1}>
         {option.label}
       </Text>
-      {option?.["isPersonal"] && (
-        <Tooltip label="Private space" withArrow>
-          <IconLock size={14} color="var(--mantine-color-gray-6)" />
-        </Tooltip>
-      )}
+      <PrivateSpaceIndicator isPrivate={option?.["isPersonal"]} />
     </div>
   </Group>
 );
@@ -97,13 +93,7 @@ export function SpaceSelect({
       nothingFoundMessage={t("No space found")}
       limit={50}
       checkIconPosition="right"
-      comboboxProps={{
-        width,
-        withinPortal: true,
-        position: "bottom",
-        keepMounted: false,
-        dropdownPadding: 0,
-      }}
+      comboboxProps={{ width, withinPortal: true, position: "bottom", keepMounted: false, dropdownPadding: 0 }}
       dropdownOpened={opened}
     />
   );

@@ -5,7 +5,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Transform, TransformFnParams } from 'class-transformer';
+import {Transform, TransformFnParams} from "class-transformer";
 
 export class CreateSpaceDto {
   @MinLength(2)
@@ -25,12 +25,4 @@ export class CreateSpaceDto {
       'Space slug must start with a letter or number and may contain hyphens and underscores',
   })
   slug: string;
-}
-
-export class CreatePrivateSpaceDto {
-  @MinLength(2)
-  @MaxLength(100)
-  @IsString()
-  @Transform(({ value }: TransformFnParams) => value?.trim())
-  name: string;
 }

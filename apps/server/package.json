@@ -161,7 +161,8 @@
     "moduleFileExtensions": [
       "js",
       "json",
-      "ts"
+      "ts",
+      "tsx"
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
@@ -181,7 +182,7 @@
           ]
         }
       ],
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.tsx?$": "ts-jest"
     },
     "transformIgnorePatterns": [
       "/node_modules/(?!(\\.pnpm/)?(nanoid|uuid|image-dimensions|marked|happy-dom)(@|/))"
@@ -192,8 +193,14 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
+      "^marked$": "<rootDir>/test/mocks/marked.ts",
+      "^image-dimensions$": "<rootDir>/test/mocks/image-dimensions.ts",
+      "^uuid$": "<rootDir>/test/mocks/uuid.ts",
+      "^nanoid$": "<rootDir>/test/mocks/nanoid.ts",
+      "^@docmost/editor-ext$": "<rootDir>/../../../packages/editor-ext/dist/index.js",
+      "^@docmost/transactional/(.*)$": "<rootDir>/integrations/transactional/$1.tsx",
+      "^.*collaboration/collaboration\\.gateway$": "<rootDir>/test/mocks/collaboration-gateway.ts",
       "^@docmost/db/(.*)$": "<rootDir>/database/$1",
-      "^@docmost/transactional/(.*)$": "<rootDir>/integrations/transactional/$1",
       "^@docmost/ee/(.*)$": "<rootDir>/ee/$1",
       "^src/(.*)$": "<rootDir>/$1",
       "^@docmost/base-formula/server$": "<rootDir>/../../../packages/base-formula/src/index.server.ts",

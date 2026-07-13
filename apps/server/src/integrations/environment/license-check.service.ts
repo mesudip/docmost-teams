@@ -1,14 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { EnvironmentService } from './environment.service';
-import { Feature } from '../../common/features';
-
-const MESUDIP_FORK_TIER = 'mesudip-fork';
-const MESUDIP_FORK_FEATURES: string[] = [
-  Feature.SECURITY_SETTINGS,
-  Feature.SSO_CUSTOM,
-  Feature.PERSONAL_SPACES,
-];
+import { TEAMS_FEATURES, TEAMS_TIER } from '../../teams/features';
 
 @Injectable()
 export class LicenseCheckService {
@@ -38,9 +31,7 @@ export class LicenseCheckService {
     if (this.environmentService.isCloud()) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const {
-          getFeaturesForCloudPlan,
-        } = require('../../ee/licence/feature-registry');
+        const { getFeaturesForCloudPlan } = require('../../ee/licence/feature-registry');
         return getFeaturesForCloudPlan(plan).has(feature);
       } catch {
         return false;
@@ -55,7 +46,7 @@ export class LicenseCheckService {
       });
       return licenseService.hasFeature(licenseKey, feature);
     } catch {
-      return MESUDIP_FORK_FEATURES.includes(feature);
+      return TEAMS_FEATURES.includes(feature);
     }
   }
 
@@ -68,7 +59,7 @@ export class LicenseCheckService {
       });
       return licenseService.getFeatures(licenseKey);
     } catch {
-      return [...MESUDIP_FORK_FEATURES];
+      return [...TEAMS_FEATURES];
     }
   }
 
@@ -76,9 +67,7 @@ export class LicenseCheckService {
     if (this.environmentService.isCloud()) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const {
-          getFeaturesForCloudPlan,
-        } = require('../../ee/licence/feature-registry');
+        const { getFeaturesForCloudPlan } = require('../../ee/licence/feature-registry');
         return [...getFeaturesForCloudPlan(plan)];
       } catch {
         return [];
@@ -93,7 +82,7 @@ export class LicenseCheckService {
       return plan ?? 'standard';
     }
 
-    return this.getLicenseType(licenseKey) ?? MESUDIP_FORK_TIER;
+    return this.getLicenseType(licenseKey) ?? TEAMS_TIER;
   }
 
   private getLicenseType(licenseKey: string): string | null {

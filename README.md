@@ -36,12 +36,14 @@ To get started with Docmost, please refer to our [documentation](https://docmost
 </p>
 
 ### License
+
 Docmost core is licensed under the open-source AGPL 3.0 license.  
-Enterprise features are available under an enterprise license (Enterprise Edition).  
+Enterprise features are available under an enterprise license (Enterprise Edition).
 
 All files in the following directories are licensed under the Docmost Enterprise license defined in `packages/ee/License`.
-  - apps/client/src/ee
-  - packages/ee
+
+- apps/client/src/ee
+- packages/ee
 
 ### Contributing
 
@@ -74,6 +76,7 @@ bash script/bootstrap-local-dev.sh
 ```
 
 This will:
+
 - start Postgres, Redis, Keycloak, and the Keycloak client bootstrap
 - start the backend if it is not already running
 - wait for backend health on `http://localhost:3000`
@@ -81,6 +84,7 @@ This will:
 - create or update the local Keycloak OIDC provider in Docmost
 
 Infrastructure started by the helper:
+
 - Postgres 18 on `localhost:5432`
 - Redis on `localhost:6379`
 - Keycloak on `http://localhost:8081`
@@ -96,11 +100,13 @@ pnpm dev
 ```
 
 5. Open:
+
 - app: `http://localhost:3000`
 - Vite dev client: `http://localhost:5173`
 - Keycloak: `http://localhost:8081`
 
 Notes:
+
 - `script/bootstrap-local-dev.sh` is the recommended startup flow for this fork.
 - The helper starts the backend in the background when needed and writes logs to `.local-dev/server-dev.log`.
 - `apps/client/pnpm dev` only starts Vite on `localhost:5173`. It does not start the API server.
@@ -115,29 +121,31 @@ python3 scripts/setup_docmost_local_auth.py
 ```
 
 Default local credentials:
+
 - Docmost admin: `admin@docmost.local` / `admin12345`
 - Keycloak admin: `admin` / `admin`
 - Keycloak test users: `admin` / `admin`, `user1` / `pass`, `user2` / `pass`
 
 Useful commands:
+
 ```bash
 docker compose -f docker-compose-dev.yml down
 docker compose -f docker-compose-dev.yml logs -f
 ```
 
-OIDC SSO is implemented directly under `apps/server/src/core/sso`; this fork does not depend on the upstream enterprise submodule. New providers require an explicit `email_verified` claim by default. An administrator can disable that requirement in the provider settings when the identity provider verifies email ownership through its own policy without emitting the claim.
+OIDC SSO is implemented under the fork-owned `apps/server/src/teams/sso` module; this fork does not depend on the upstream enterprise submodule. New providers require an explicit `email_verified` claim by default. An administrator can disable that requirement in the provider settings when the identity provider verifies email ownership through its own policy without emitting the claim.
 
 The local bootstrap enables private spaces and enforces SSO after configuring Keycloak. OIDC group sync maps members of the case-insensitive `Root` group to the Docmost workspace owner role.
 
 Pushing a semantic version tag such as `v1.2.3` publishes multi-architecture images to GHCR with the `1.2.3` and `latest` tags.
 
 ## Thanks
+
 Special thanks to;
 
 <img width="100" alt="Crowdin" src="https://github.com/user-attachments/assets/a6c3d352-e41b-448d-b6cd-3fbca3109f07" />
 
 [Crowdin](https://crowdin.com/) for providing access to their localization platform.
-
 
 <img width="48" alt="Algolia-mark-square-white" src="https://github.com/user-attachments/assets/6ccad04a-9589-4965-b6a1-d5cb1f4f9e94" />
 

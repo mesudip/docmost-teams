@@ -22,7 +22,7 @@ import CloudLogin from "@/ee/pages/cloud-login.tsx";
 import CreateWorkspace from "@/ee/pages/create-workspace.tsx";
 import { isCloud } from "@/lib/config.ts";
 import { useTranslation } from "react-i18next";
-import Security from "@/ee/security/pages/security.tsx";
+import Security from "@/teams/security/pages/security.tsx";
 import License from "@/ee/licence/pages/license.tsx";
 import { useRedirectToCloudSelect } from "@/ee/hooks/use-redirect-to-cloud-select.tsx";
 import SharedPage from "@/pages/share/shared-page.tsx";
@@ -96,16 +96,10 @@ export default function App() {
           <Route path={"/favorites"} element={<FavoritesPage />} />
           <Route path={"/labels/:labelName"} element={<LabelPage />} />
           <Route path={"/templates"} element={<TemplateList />} />
-          <Route
-            path={"/templates/:templateId"}
-            element={<TemplateEditor />}
-          />
+          <Route path={"/templates/:templateId"} element={<TemplateEditor />} />
           <Route path={"/s/:spaceSlug"} element={<SpaceHome />} />
           <Route path={"/s/:spaceSlug/trash"} element={<SpaceTrash />} />
-          <Route
-            path={"/s/:spaceSlug/p/:pageSlug"}
-            element={<Page />}
-          />
+          <Route path={"/s/:spaceSlug/p/:pageSlug"} element={<Page />} />
 
           <Route path={"/base/:pageId"} element={<BasePage />} />
 

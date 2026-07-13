@@ -15,7 +15,6 @@ import {
   IconSettings,
   IconEye,
   IconEyeOff,
-  IconLock,
 } from "@tabler/icons-react";
 import StarButton from "@/features/favorite/components/star-button";
 import {
@@ -40,16 +39,9 @@ import clsx from "clsx";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
 import { AutoTooltipText } from "@/components/ui/auto-tooltip-text.tsx";
+import { PrivateSpaceIndicator } from "@/teams/private-space/components/private-space-indicator";
 
-function WatchButton({
-  spaceId,
-  watchedIds,
-  size = 16,
-}: {
-  spaceId: string;
-  watchedIds: Set<string>;
-  size?: number;
-}) {
+function WatchButton({ spaceId, watchedIds, size = 16 }: { spaceId: string; watchedIds: Set<string>; size?: number }) {
   const { t } = useTranslation();
   const watchMutation = useWatchSpaceMutation();
   const unwatchMutation = useUnwatchSpaceMutation();
@@ -168,28 +160,11 @@ export default function AllSpacesList({
                           variant="filled"
                           size="md"
                         />
-                        <div
-                          style={{
-                            minWidth: 0,
-                            overflow: "hidden",
-                            maxWidth: 350,
-                          }}
-                        >
+                        <div style={{ minWidth: 0, overflow: "hidden", maxWidth: 350 }}>
                           <AutoTooltipText fz="sm" fw={500} lineClamp={1}>
                             {space.name}
                           </AutoTooltipText>
-                          {space.isPersonal && (
-                            <Tooltip label={t("Private space")} withArrow>
-                              <IconLock
-                                size={14}
-                                color="var(--mantine-color-gray-6)"
-                                style={{
-                                  marginLeft: 6,
-                                  verticalAlign: "middle",
-                                }}
-                              />
-                            </Tooltip>
-                          )}
+                          <PrivateSpaceIndicator isPrivate={space.isPersonal} />
                           {space.description && (
                             <Text fz="xs" c="dimmed" lineClamp={2}>
                               {space.description}
@@ -206,17 +181,8 @@ export default function AllSpacesList({
                   </Table.Td>
                   <Table.Td>
                     <Group gap="xs" justify="flex-end" wrap="nowrap">
-                      <StarButton
-                        type="space"
-                        spaceId={space.id}
-                        name={space.name}
-                        size={16}
-                      />
-                      <WatchButton
-                        spaceId={space.id}
-                        watchedIds={watchedIds}
-                        size={16}
-                      />
+                      <StarButton type="space" spaceId={space.id} name={space.name} size={16} />
+                      <WatchButton spaceId={space.id} watchedIds={watchedIds} size={16} />
                       <Menu position="bottom-end">
                         <Menu.Target>
                           <ActionIcon

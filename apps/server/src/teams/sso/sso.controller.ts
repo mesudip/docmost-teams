@@ -19,11 +19,17 @@ import { SsoService } from './sso.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { SkipTransform } from '../../common/decorators/skip-transform.decorator';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { SessionService } from '../session/session.service';
+import { SessionService } from '../../core/session/session.service';
 import { EnvironmentService } from '../../integrations/environment/environment.service';
 import { UserRole } from '../../common/helpers/types/permission';
+import {
+  CreateSsoProviderDto,
+  ProviderIdDto,
+  UpdateSsoProviderDto,
+} from './sso-provider.dto';
 
 const SSO_STATE_COOKIE = 'docmostOidcState';
+const SSO_STATE_TTL_SECONDS = 10 * 60;
 
 @Controller('sso')
 export class SsoController {
@@ -36,7 +42,10 @@ export class SsoController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('providers')
-  async providers(@AuthUser() user: User, @AuthWorkspace() workspace: Workspace) {
+  async providers(
+    @AuthUser() user: User,
+    @AuthWorkspace() workspace: Workspace,
+  ) {
     this.assertAdmin(user);
     return this.ssoService.listProviders(workspace.id);
   }
@@ -47,7 +56,7 @@ export class SsoController {
   async info(
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
-    @Body() body: { providerId?: string; id?: string },
+    @Body() body: ProviderIdDto,
   ) {
     this.assertAdmin(user);
     return this.ssoService.getProvider(
@@ -62,14 +71,10 @@ export class SsoController {
   async create(
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateSsoProviderDto,
   ) {
     this.assertAdmin(user);
-    return this.ssoService.createProvider(
-      workspace.id,
-      user.id,
-      body as Partial<any>,
-    );
+    return this.ssoService.createProvider(workspace.id, user.id, body);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -78,10 +83,10 @@ export class SsoController {
   async update(
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateSsoProviderDto,
   ) {
     this.assertAdmin(user);
-    return this.ssoService.updateProvider(workspace.id, body as Partial<any>);
+    return this.ssoService.updateProvider(workspace.id, body);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -90,10 +95,13 @@ export class SsoController {
   async remove(
     @AuthUser() user: User,
     @AuthWorkspace() workspace: Workspace,
-    @Body() body: { providerId?: string; id?: string },
+    @Body() body: ProviderIdDto,
   ) {
     this.assertAdmin(user);
-    await this.ssoService.deleteProvider(workspace.id, body.providerId || body.id);
+    await this.ssoService.deleteProvider(
+      workspace.id,
+      body.providerId || body.id,
+    );
     return { success: true };
   }
 
@@ -128,6 +136,7 @@ export class SsoController {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
+        maxAge: SSO_STATE_TTL_SECONDS,
         secure: this.environmentService.isHttps(),
       },
     );

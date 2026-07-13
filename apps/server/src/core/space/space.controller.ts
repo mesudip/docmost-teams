@@ -33,7 +33,8 @@ import {
   WorkspaceCaslSubject,
 } from '../casl/interfaces/workspace-ability.type';
 import WorkspaceAbilityFactory from '../casl/abilities/workspace-ability.factory';
-import { CreatePrivateSpaceDto, CreateSpaceDto } from './dto/create-space.dto';
+import { CreateSpaceDto } from './dto/create-space.dto';
+import { SpaceRole, UserRole } from '../../common/helpers/types/permission';
 
 @UseGuards(JwtAuthGuard)
 @Controller('spaces')
@@ -52,11 +53,20 @@ export class SpaceController {
     @Body()
     pagination: PaginationOptions,
     @AuthUser() user: User,
+    @AuthWorkspace() workspace: Workspace,
   ) {
-    const result = await this.spaceMemberService.getUserSpaces(
-      user.id,
-      pagination,
-    );
+    const isOwner = user.role === UserRole.OWNER;
+    const result = isOwner
+      ? await this.spaceService.getWorkspaceSpaces(workspace.id, pagination)
+      : await this.spaceMemberService.getUserSpaces(user.id, pagination);
+
+    if (isOwner) {
+      result.items = result.items.map((space) => ({
+        ...space,
+        membership: { userId: user.id, role: SpaceRole.ADMIN },
+      }));
+      return result;
+    }
 
     if (result.items.length > 0) {
       const spaceIds = result.items.map((s) => s.id);
@@ -116,7 +126,10 @@ export class SpaceController {
       space.id,
     );
 
-    const userSpaceRole = findHighestUserSpaceRole(userSpaceRoles);
+    const userSpaceRole =
+      user.role === UserRole.OWNER
+        ? SpaceRole.ADMIN
+        : findHighestUserSpaceRole(userSpaceRoles);
 
     const membership = {
       userId: user.id,
@@ -141,36 +154,6 @@ export class SpaceController {
       throw new ForbiddenException();
     }
     return this.spaceService.createSpace(user, workspace.id, createSpaceDto);
-  }
-
-  @HttpCode(HttpStatus.OK)
-  @Post('private/create')
-  async createPrivateSpace(
-    @Body() dto: CreatePrivateSpaceDto,
-    @AuthUser() user: User,
-    @AuthWorkspace() workspace: Workspace,
-  ) {
-    const ability = this.workspaceAbility.createForUser(user, workspace);
-    if (
-      ability.cannot(
-        WorkspaceCaslAction.Create,
-        WorkspaceCaslSubject.PrivateSpace,
-      )
-    ) {
-      throw new ForbiddenException();
-    }
-
-    const allowPersonalSpaces =
-      (workspace.settings as Record<string, any>)?.spaces?.allowPersonal ===
-      true;
-
-    if (!allowPersonalSpaces) {
-      throw new ForbiddenException(
-        'Private spaces are disabled in this workspace',
-      );
-    }
-
-    return this.spaceService.createPrivateSpace(user, workspace.id, dto.name);
   }
 
   @HttpCode(HttpStatus.OK)

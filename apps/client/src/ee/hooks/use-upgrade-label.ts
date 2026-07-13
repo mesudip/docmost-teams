@@ -2,7 +2,7 @@ import { useAtom } from "jotai";
 import { useTranslation } from "react-i18next";
 import { entitlementAtom } from "@/ee/entitlement/entitlement-atom";
 import { isCloud } from "@/lib/config";
-import { isForkTier, hasPaidLicenseTier } from "@/ee/entitlement/tier.utils";
+import { hasPaidLicenseTier, isForkTier } from "@/teams/entitlement/tier.utils";
 
 export function useUpgradeLabel(): string {
   const { t } = useTranslation();

@@ -15,11 +15,12 @@ import {
   User,
   Workspace,
 } from '@docmost/db/types/entity.types';
-import { SignupService } from '../auth/services/signup.service';
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import { SignupService } from '../../core/auth/services/signup.service';
 import { UserRepo } from '@docmost/db/repos/user/user.repo';
 import { EnvironmentService } from '../../integrations/environment/environment.service';
 import { nanoIdGen } from '../../common/helpers';
-import { validateAllowedEmail } from '../auth/auth.util';
+import { validateAllowedEmail } from '../../core/auth/auth.util';
 import { executeTx } from '@docmost/db/utils';
 import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
 import { WatcherRepo } from '@docmost/db/repos/watcher/watcher.repo';
@@ -34,14 +35,18 @@ import {
   discovery,
   fetchUserInfo,
   randomPKCECodeVerifier,
+  randomNonce,
   randomState,
 } from 'openid-client';
 
 const OIDC_ONLY_PROVIDER_TYPE = 'oidc';
 const ROOT_ADMIN_GROUP = 'root';
+const OIDC_STATE_TTL_MS = 10 * 60 * 1000;
 
 type SsoCookieState = {
   codeVerifier: string;
+  expiresAt: number;
+  nonce: string;
   origin: string;
   providerId: string;
   redirectPath: string;
@@ -51,6 +56,20 @@ type SsoCookieState = {
 type ProviderSettings = {
   groupClaimName?: string;
   requireVerifiedEmail?: boolean;
+};
+
+type ProviderMutationPayload = {
+  id?: string;
+  providerId?: string;
+  type?: string;
+  name?: string;
+  oidcIssuer?: string;
+  oidcClientId?: string;
+  oidcClientSecret?: string;
+  allowSignup?: boolean;
+  isEnabled?: boolean;
+  groupSync?: boolean;
+  settings?: ProviderSettings;
 };
 
 type SafeAuthProvider = Pick<
@@ -114,7 +133,7 @@ export class SsoService {
   async createProvider(
     workspaceId: string,
     userId: string,
-    payload: Partial<AuthProvider>,
+    payload: ProviderMutationPayload,
   ) {
     if (payload.type !== OIDC_ONLY_PROVIDER_TYPE) {
       throw new BadRequestException(
@@ -160,7 +179,7 @@ export class SsoService {
     return this.sanitizeProvider(provider);
   }
 
-  async updateProvider(workspaceId: string, payload: Partial<AuthProvider>) {
+  async updateProvider(workspaceId: string, payload: ProviderMutationPayload) {
     const providerId = this.resolveProviderId(payload);
     const provider = await this.getProviderOrThrow(workspaceId, providerId);
 
@@ -242,6 +261,7 @@ export class SsoService {
     const callbackUrl = this.buildCallbackUrl(opts.origin, provider.id);
     const config = await this.getOidcClientConfig(provider, callbackUrl);
     const state = randomState();
+    const nonce = randomNonce();
     const codeVerifier = randomPKCECodeVerifier();
     const codeChallenge = await calculatePKCECodeChallenge(codeVerifier);
 
@@ -252,6 +272,7 @@ export class SsoService {
       // silently reusing a previous IdP browser session after Docmost logout.
       prompt: 'login',
       state,
+      nonce,
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
       redirect_uri: callbackUrl,
@@ -262,6 +283,8 @@ export class SsoService {
       state: {
         state,
         codeVerifier,
+        expiresAt: Date.now() + OIDC_STATE_TTL_MS,
+        nonce,
         providerId: provider.id,
         origin: opts.origin,
         redirectPath: opts.redirectPath,
@@ -278,6 +301,9 @@ export class SsoService {
     if (!opts.cookieState?.providerId || !opts.cookieState?.state) {
       throw new BadRequestException('Missing OIDC login state.');
     }
+    if (opts.cookieState.expiresAt < Date.now()) {
+      throw new BadRequestException('Expired OIDC login state.');
+    }
 
     const provider = await this.getProviderOrThrow(
       opts.workspaceId,
@@ -291,6 +317,7 @@ export class SsoService {
       new URL(opts.currentUrl),
       {
         expectedState: opts.cookieState.state,
+        expectedNonce: opts.cookieState.nonce,
         pkceCodeVerifier: opts.cookieState.codeVerifier,
       },
     );
@@ -403,7 +430,18 @@ export class SsoService {
           ? 'https'
           : 'http');
 
-    return `${proto}://${resolvedHost}`;
+    let candidateOrigin: string;
+    try {
+      candidateOrigin = new URL(`${proto}://${resolvedHost}`).origin;
+    } catch {
+      throw new BadRequestException('Invalid OIDC redirect origin.');
+    }
+
+    if (!this.getAllowedRedirectOrigins().has(candidateOrigin)) {
+      throw new BadRequestException('OIDC redirect origin is not allowed.');
+    }
+
+    return candidateOrigin;
   }
 
   sanitizeRedirectPath(input?: string | null): string {
@@ -423,24 +461,44 @@ export class SsoService {
   }
 
   encodeStateCookie(state: SsoCookieState): string {
-    return Buffer.from(JSON.stringify(state), 'utf8').toString('base64url');
+    const payload = Buffer.from(JSON.stringify(state), 'utf8').toString(
+      'base64url',
+    );
+    return `${payload}.${this.signStatePayload(payload)}`;
   }
 
   decodeStateCookie(raw?: string): SsoCookieState | null {
     if (!raw) return null;
 
     try {
+      const [payload, signature] = raw.split('.');
+      if (!payload || !signature) return null;
+
+      const expectedSignature = this.signStatePayload(payload);
+      const signatureBuffer = Buffer.from(signature, 'base64url');
+      const expectedBuffer = Buffer.from(expectedSignature, 'base64url');
+      if (
+        signatureBuffer.length !== expectedBuffer.length ||
+        !timingSafeEqual(signatureBuffer, expectedBuffer)
+      ) {
+        return null;
+      }
+
       const parsed = JSON.parse(
-        Buffer.from(raw, 'base64url').toString('utf8'),
+        Buffer.from(payload, 'base64url').toString('utf8'),
       ) as SsoCookieState;
 
       if (
         !parsed ||
         typeof parsed.codeVerifier !== 'string' ||
+        typeof parsed.expiresAt !== 'number' ||
+        typeof parsed.nonce !== 'string' ||
         typeof parsed.origin !== 'string' ||
         typeof parsed.providerId !== 'string' ||
         typeof parsed.redirectPath !== 'string' ||
-        typeof parsed.state !== 'string'
+        typeof parsed.state !== 'string' ||
+        parsed.expiresAt < Date.now() ||
+        !this.getAllowedRedirectOrigins().has(parsed.origin)
       ) {
         return null;
       }
@@ -449,6 +507,32 @@ export class SsoService {
     } catch {
       return null;
     }
+  }
+
+  private signStatePayload(payload: string): string {
+    return createHmac('sha256', this.environmentService.getAppSecret())
+      .update(payload)
+      .digest('base64url');
+  }
+
+  private getAllowedRedirectOrigins(): Set<string> {
+    const configuredOrigins = (process.env.OIDC_ALLOWED_REDIRECT_ORIGINS ?? '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    const allowed = new Set<string>([this.environmentService.getAppUrl()]);
+    for (const value of configuredOrigins) {
+      try {
+        allowed.add(new URL(value).origin);
+      } catch {
+        throw new BadRequestException(
+          'OIDC_ALLOWED_REDIRECT_ORIGINS contains an invalid URL.',
+        );
+      }
+    }
+
+    return allowed;
   }
 
   private async findOrCreateUserFromOidc(opts: {
@@ -566,9 +650,7 @@ export class SsoService {
     return `${origin}/api/sso/oidc/${providerId}/callback`;
   }
 
-  private resolveProviderId(
-    payload: Partial<AuthProvider> & { providerId?: string },
-  ) {
+  private resolveProviderId(payload: ProviderMutationPayload) {
     const providerId = payload.providerId || payload.id;
     if (!providerId) {
       throw new BadRequestException('Provider id is required.');
@@ -675,7 +757,7 @@ export class SsoService {
 
   private resolveProviderSettings(
     provider: AuthProvider,
-    payload: Partial<AuthProvider>,
+    payload: ProviderMutationPayload,
   ): ProviderSettings | undefined {
     const incoming = payload.settings as ProviderSettings | undefined;
     if (!incoming) {
