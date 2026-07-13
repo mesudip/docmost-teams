@@ -117,6 +117,9 @@ export class SpaceService {
         workspaceId: workspaceId,
         slug: createSpaceDto.slug,
         isPersonal: options?.isPersonal ?? false,
+        ...(options?.isPersonal
+          ? { settings: { sharing: { disabled: true } } }
+          : {}),
       },
       trx,
     );
@@ -267,9 +270,10 @@ export class SpaceService {
 
   async getWorkspaceSpaces(
     workspaceId: string,
+    userId: string,
     pagination: PaginationOptions,
   ): Promise<CursorPaginationResult<Space>> {
-    return this.spaceRepo.getSpacesInWorkspace(workspaceId, pagination);
+    return this.spaceRepo.getSpacesInWorkspace(workspaceId, userId, pagination);
   }
 
   async deleteSpace(spaceId: string, workspaceId: string): Promise<void> {

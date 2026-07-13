@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { SpaceRole, UserRole } from '../../../common/helpers/types/permission';
 import {
   SpaceCaslAction,
@@ -6,14 +7,20 @@ import {
 import SpaceAbilityFactory from './space-ability.factory';
 
 describe('SpaceAbilityFactory', () => {
-  it('gives workspace owners full space administration without membership', async () => {
+  it('gives workspace owners full administration of ordinary spaces without membership', async () => {
     const spaceMemberRepo = {
       getUserSpaceRoles: jest.fn(),
     };
-    const factory = new SpaceAbilityFactory(spaceMemberRepo as never);
+    const spaceRepo = {
+      findById: jest.fn().mockResolvedValue({ isPersonal: false }),
+    };
+    const factory = new SpaceAbilityFactory(
+      spaceMemberRepo as never,
+      spaceRepo as never,
+    );
 
     const ability = await factory.createForUser(
-      { id: 'owner', role: UserRole.OWNER } as never,
+      { id: 'owner', workspaceId: 'workspace', role: UserRole.OWNER } as never,
       'private-space',
     );
 
@@ -26,16 +33,49 @@ describe('SpaceAbilityFactory', () => {
     );
   });
 
+  it('does not let workspace owners bypass membership in personal spaces', async () => {
+    const spaceMemberRepo = {
+      getUserSpaceRoles: jest.fn().mockResolvedValue(undefined),
+    };
+    const spaceRepo = {
+      findById: jest.fn().mockResolvedValue({ isPersonal: true }),
+    };
+    const factory = new SpaceAbilityFactory(
+      spaceMemberRepo as never,
+      spaceRepo as never,
+    );
+
+    await expect(
+      factory.createForUser(
+        {
+          id: 'owner',
+          workspaceId: 'workspace',
+          role: UserRole.OWNER,
+        } as never,
+        'personal-space',
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(spaceMemberRepo.getUserSpaceRoles).not.toHaveBeenCalled();
+  });
+
   it('keeps ordinary workspace members scoped to their space role', async () => {
     const spaceMemberRepo = {
       getUserSpaceRoles: jest
         .fn()
         .mockResolvedValue([{ userId: 'member', role: SpaceRole.READER }]),
     };
-    const factory = new SpaceAbilityFactory(spaceMemberRepo as never);
+    const factory = new SpaceAbilityFactory(
+      spaceMemberRepo as never,
+      { findById: jest.fn().mockResolvedValue({ isPersonal: false }) } as never,
+    );
 
     const ability = await factory.createForUser(
-      { id: 'member', role: UserRole.MEMBER } as never,
+      {
+        id: 'member',
+        workspaceId: 'workspace',
+        role: UserRole.MEMBER,
+      } as never,
       'space',
     );
 

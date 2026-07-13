@@ -7,3 +7,11 @@ export async function createPersonalSpace(data: {
   const req = await api.post<ISpace>("/spaces/private/create", data);
   return req.data;
 }
+
+export async function convertPersonalSpace(data: {
+  spaceId: string;
+  isPersonal: boolean;
+}): Promise<ISpace> {
+  const req = await api.post<ISpace>("/spaces/private/convert", data);
+  return req.data;
+}
