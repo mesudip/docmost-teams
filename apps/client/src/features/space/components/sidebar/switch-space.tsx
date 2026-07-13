@@ -6,7 +6,6 @@ import { Button, Popover, Text, Tooltip } from "@mantine/core";
 import {
   IconChevronDown,
   IconChevronUp,
-  IconLock,
   IconWorld,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
@@ -14,6 +13,7 @@ import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { PrivateSpaceIndicator } from "@/teams/private-space/components/private-space-indicator";
 
 interface SwitchSpaceProps {
   spaceName: string;
@@ -57,9 +57,7 @@ export function SwitchSpace({
           variant="subtle"
           fullWidth
           justify="space-between"
-          rightSection={
-            opened ? <IconChevronUp size={18} /> : <IconChevronDown size={18} />
-          }
+          rightSection={opened ? <IconChevronUp size={18} /> : <IconChevronDown size={18} />}
           color="gray"
           onClick={toggle}
         >
@@ -84,9 +82,7 @@ export function SwitchSpace({
               />
             </Tooltip>
           )}
-          {isPersonal && (
-            <IconLock size={14} color="var(--mantine-color-gray-6)" />
-          )}
+          <PrivateSpaceIndicator isPrivate={isPersonal} />
         </Button>
       </Popover.Target>
       <Popover.Dropdown>

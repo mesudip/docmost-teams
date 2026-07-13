@@ -35,7 +35,7 @@ const PasswordReset = lazy(() => import("./pages/auth/password-reset"));
 const Billing = lazy(() => import("@/ee/billing/pages/billing.tsx"));
 const CloudLogin = lazy(() => import("@/ee/pages/cloud-login.tsx"));
 const CreateWorkspace = lazy(() => import("@/ee/pages/create-workspace.tsx"));
-const Security = lazy(() => import("@/ee/security/pages/security.tsx"));
+const Security = lazy(() => import("@/teams/security/pages/security.tsx"));
 const License = lazy(() => import("@/ee/licence/pages/license.tsx"));
 const SharedPage = lazy(() => import("@/pages/share/shared-page.tsx"));
 const PdfRenderPage = lazy(() => import("@/ee/pdf-export/pdf-render-page.tsx"));
@@ -149,16 +149,10 @@ export default function App() {
           <Route path={"/favorites"} element={<FavoritesPage />} />
           <Route path={"/labels/:labelName"} element={<LabelPage />} />
           <Route path={"/templates"} element={<TemplateList />} />
-          <Route
-            path={"/templates/:templateId"}
-            element={<TemplateEditor />}
-          />
+          <Route path={"/templates/:templateId"} element={<TemplateEditor />} />
           <Route path={"/s/:spaceSlug"} element={<SpaceHome />} />
           <Route path={"/s/:spaceSlug/trash"} element={<SpaceTrash />} />
-          <Route
-            path={"/s/:spaceSlug/p/:pageSlug"}
-            element={<Page />}
-          />
+          <Route path={"/s/:spaceSlug/p/:pageSlug"} element={<Page />} />
 
           <Route path={"/base/:pageId"} element={<BasePage />} />
 

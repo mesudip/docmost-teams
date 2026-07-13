@@ -11,6 +11,7 @@ BACKEND_LOG_DIR="${ROOT_DIR}/.local-dev"
 BACKEND_LOG_FILE="${BACKEND_LOG_DIR}/server-dev.log"
 BACKEND_PID_FILE="${BACKEND_LOG_DIR}/server-dev.pid"
 WAIT_SECS="${BOOTSTRAP_TIMEOUT_SECS:-900}"
+export OIDC_ALLOWED_REDIRECT_ORIGINS="${OIDC_ALLOWED_REDIRECT_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:5175}"
 
 log() {
   printf '%s\n' "$*"
@@ -35,6 +36,17 @@ is_backend_schema_ready() {
   [[ "$status" == "200" || "$status" == "404" ]]
 }
 
+stop_process_tree() {
+  local parent_pid="$1"
+  local child_pid
+
+  while read -r child_pid; do
+    [[ -n "$child_pid" ]] && stop_process_tree "$child_pid"
+  done < <(pgrep -P "$parent_pid" 2>/dev/null || true)
+
+  kill "$parent_pid" 2>/dev/null || true
+}
+
 wait_for_postgres() {
   local deadline
   deadline=$(( $(date +%s) + WAIT_SECS ))
@@ -54,6 +66,18 @@ wait_for_postgres() {
 ensure_backend_started() {
   mkdir -p "$BACKEND_LOG_DIR"
 
+  # A prior bootstrap owns this process. Restart it so changes to the source,
+  # migrations, and bootstrap-provided environment are applied on every run.
+  if [[ -f "$BACKEND_PID_FILE" ]]; then
+    existing_pid="$(cat "$BACKEND_PID_FILE" 2>/dev/null || true)"
+    if [[ -n "${existing_pid}" ]] && kill -0 "${existing_pid}" 2>/dev/null; then
+      log "Restarting previous managed backend process ${existing_pid}."
+      stop_process_tree "${existing_pid}"
+      sleep 2
+    fi
+    rm -f "$BACKEND_PID_FILE"
+  fi
+
   if is_backend_healthy; then
     if is_backend_schema_ready; then
       log "Backend already reachable and schema-ready at ${BACKEND_URL}."
@@ -69,15 +93,8 @@ ensure_backend_started() {
     fi
   fi
 
-  if [[ -f "$BACKEND_PID_FILE" ]]; then
-    existing_pid="$(cat "$BACKEND_PID_FILE" 2>/dev/null || true)"
-    if [[ -n "${existing_pid}" ]] && kill -0 "${existing_pid}" 2>/dev/null; then
-      log "Stopping previous managed backend process ${existing_pid} before restart."
-      kill "${existing_pid}" || true
-      sleep 2
-    fi
-    rm -f "$BACKEND_PID_FILE"
-  fi
+  log "Applying database migrations..."
+  corepack pnpm --filter ./apps/server run migration:latest >>"$BACKEND_LOG_FILE" 2>&1
 
   log "Starting backend with 'corepack pnpm run server:dev'..."
   nohup corepack pnpm run server:dev >"$BACKEND_LOG_FILE" 2>&1 &

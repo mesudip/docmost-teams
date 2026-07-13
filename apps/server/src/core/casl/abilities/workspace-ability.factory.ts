@@ -42,7 +42,6 @@ function buildWorkspaceOwnerAbility() {
   can(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.Attachment);
   can(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.API);
   can(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.Audit);
-  can(WorkspaceCaslAction.Create, WorkspaceCaslSubject.PrivateSpace);
 
   return build();
 }
@@ -59,7 +58,6 @@ function buildWorkspaceAdminAbility() {
   can(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.Member);
   can(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.Attachment);
   can(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.API);
-  can(WorkspaceCaslAction.Create, WorkspaceCaslSubject.PrivateSpace);
 
   return build();
 }
@@ -74,7 +72,6 @@ function buildWorkspaceMemberAbility() {
   can(WorkspaceCaslAction.Read, WorkspaceCaslSubject.Group);
   can(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.Attachment);
   can(WorkspaceCaslAction.Create, WorkspaceCaslSubject.API);
-  can(WorkspaceCaslAction.Create, WorkspaceCaslSubject.PrivateSpace);
 
   return build();
 }

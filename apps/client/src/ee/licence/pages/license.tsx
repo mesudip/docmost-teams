@@ -8,7 +8,7 @@ import OssDetails from "@/ee/licence/components/oss-details.tsx";
 import { useAtom } from "jotai/index";
 import { entitlementAtom } from "@/ee/entitlement/entitlement-atom";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
-import { hasPaidLicenseTier } from "@/ee/entitlement/tier.utils";
+import { hasPaidLicenseTier } from "@/teams/entitlement/tier.utils";
 
 export default function License() {
   const [entitlements] = useAtom(entitlementAtom);

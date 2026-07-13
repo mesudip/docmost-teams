@@ -9,7 +9,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { useAtom } from "jotai";
 import { entitlementAtom } from "@/ee/entitlement/entitlement-atom";
 import RemoveLicense from "@/ee/licence/components/remove-license.tsx";
-import { hasPaidLicenseTier } from "@/ee/entitlement/tier.utils";
+import { hasPaidLicenseTier } from "@/teams/entitlement/tier.utils";
 
 export default function ActivateLicense() {
   const { t } = useTranslation();
@@ -119,10 +119,7 @@ export function ActivateLicenseForm({ onClose }: ActivateLicenseFormProps) {
         <Divider label={t("Or")} labelPosition="center" />
 
         <Group justify="center">
-          <Button
-            variant="light"
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <Button variant="light" onClick={() => fileInputRef.current?.click()}>
             {t("Upload license file")}
           </Button>
         </Group>
