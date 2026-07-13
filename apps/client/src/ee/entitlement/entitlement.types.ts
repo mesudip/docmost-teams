@@ -1,4 +1,9 @@
-export type Tier = "free" | "standard" | "business" | "enterprise";
+export type Tier =
+  | "free"
+  | "standard"
+  | "business"
+  | "enterprise"
+  | "mesudip-fork";
 
 export type Entitlements = {
   cloud: boolean;

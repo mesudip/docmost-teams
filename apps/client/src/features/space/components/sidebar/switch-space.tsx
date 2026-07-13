@@ -6,6 +6,7 @@ import { Button, Popover, Text, Tooltip } from "@mantine/core";
 import {
   IconChevronDown,
   IconChevronUp,
+  IconLock,
   IconWorld,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
@@ -19,6 +20,7 @@ interface SwitchSpaceProps {
   spaceSlug: string;
   spaceIcon?: string;
   isPublished?: boolean;
+  isPersonal?: boolean;
 }
 
 export function SwitchSpace({
@@ -26,6 +28,7 @@ export function SwitchSpace({
   spaceSlug,
   spaceIcon,
   isPublished,
+  isPersonal,
 }: SwitchSpaceProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -54,7 +57,9 @@ export function SwitchSpace({
           variant="subtle"
           fullWidth
           justify="space-between"
-          rightSection={opened ? <IconChevronUp size={18} /> : <IconChevronDown size={18} />}
+          rightSection={
+            opened ? <IconChevronUp size={18} /> : <IconChevronDown size={18} />
+          }
           color="gray"
           onClick={toggle}
         >
@@ -78,6 +83,9 @@ export function SwitchSpace({
                 style={{ flexShrink: 0 }}
               />
             </Tooltip>
+          )}
+          {isPersonal && (
+            <IconLock size={14} color="var(--mantine-color-gray-6)" />
           )}
         </Button>
       </Popover.Target>

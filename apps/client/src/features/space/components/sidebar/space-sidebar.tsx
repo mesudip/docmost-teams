@@ -107,6 +107,7 @@ export function SpaceSidebar() {
               spaceSlug={space?.slug}
               spaceIcon={space?.logo}
               isPublished={isBetaPublicSpaces() && space?.isPublished}
+              isPersonal={space?.isPersonal}
             />
           </Group>
         </div>

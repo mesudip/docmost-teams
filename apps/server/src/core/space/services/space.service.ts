@@ -29,6 +29,7 @@ import {
   AUDIT_SERVICE,
   IAuditService,
 } from '../../../integrations/audit/audit.service';
+import { nanoIdGen } from '../../../common/helpers';
 
 @Injectable()
 export class SpaceService {
@@ -89,6 +90,25 @@ export class SpaceService {
     });
 
     return { ...space, memberCount: 1 };
+  }
+
+  async createPrivateSpace(
+    authUser: User,
+    workspaceId: string,
+    name: string,
+  ): Promise<Space> {
+    return this.createSpace(
+      authUser,
+      workspaceId,
+      {
+        name,
+        // Private-space slugs are system generated so users do not need to
+        // coordinate names with the rest of the workspace.
+        slug: `private-${nanoIdGen()}`,
+      },
+      undefined,
+      { isPersonal: true },
+    );
   }
 
   async create(

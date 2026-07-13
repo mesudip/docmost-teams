@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDebouncedValue } from "@mantine/hooks";
-import { Group, Select, SelectProps, Text } from "@mantine/core";
+import { Group, Select, SelectProps, Text, Tooltip } from "@mantine/core";
+import { IconLock } from "@tabler/icons-react";
 import { useGetSpacesQuery } from "@/features/space/queries/space-query.ts";
 import { ISpace } from "../../types/space.types";
 import { useTranslation } from "react-i18next";
@@ -31,6 +32,11 @@ const renderSelectOption: SelectProps["renderOption"] = ({ option }) => (
       <Text size="sm" lineClamp={1}>
         {option.label}
       </Text>
+      {option?.["isPersonal"] && (
+        <Tooltip label="Private space" withArrow>
+          <IconLock size={14} color="var(--mantine-color-gray-6)" />
+        </Tooltip>
+      )}
     </div>
   </Group>
 );
@@ -66,6 +72,7 @@ export function SpaceSelect({
             label: space.name,
             value: space.slug,
             icon: space.logo,
+            isPersonal: space.isPersonal,
           };
         });
 

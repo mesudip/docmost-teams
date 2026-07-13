@@ -5,7 +5,7 @@ import { IPagination } from "@/lib/types.ts";
 export async function getSsoProviderById(data: {
   providerId: string;
 }): Promise<any> {
-  const req = await api.post<IAuthProvider>("/sso/info");
+  const req = await api.post<IAuthProvider>("/sso/info", data);
   return req.data;
 }
 

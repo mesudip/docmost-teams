@@ -3,8 +3,8 @@
   "homepage": "https://docmost.com",
   "private": true,
   "scripts": {
-    "build": "tsc --build",
-    "dev": "tsc --watch",
+    "build": "pnpm exec tsc --build",
+    "dev": "pnpm exec tsc --watch",
     "bench": "tsx bench/formula-bench.ts"
   },
   "main": "dist/index.server.js",
@@ -24,5 +24,8 @@
     }
   },
   "types": "dist/index.server.d.ts",
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
 }
