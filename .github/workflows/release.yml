@@ -2,6 +2,9 @@ name: Publish container image
 
 on:
   push:
+    branches:
+      - main
+      - dev
     tags:
       - "v*"
 
@@ -39,8 +42,9 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=latest
+            type=raw,value=${{ github.sha }},enable=${{ github.ref_type == 'branch' }}
+            type=semver,pattern={{version}},enable=${{ github.ref_type == 'tag' }}
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
