@@ -39,7 +39,7 @@
     "@tiptap/extension-code": "3.27.1",
     "@tiptap/extensions": "3.27.1",
     "alfaaz": "1.1.0",
-    "axios": "1.16.0",
+    "axios": "1.18.0",
     "blueimp-load-image": "5.16.0",
     "clsx": "2.1.1",
     "file-saver": "2.0.5",
