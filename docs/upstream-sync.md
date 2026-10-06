@@ -16,19 +16,31 @@ it again.
 
 ## Sync workflow
 
-Never rebase or force-push `main`. Start from an up-to-date fork main and merge
-the parent into a dated branch:
+Fork releases track tagged upstream releases. The fork patch is kept as a
+linear series of commits on top of the upstream release tag it is based on, so
+a sync rebases that series onto the next tag. Keep a backup of the previous
+`main` and publish with a lease:
 
 ```bash
-git fetch origin upstream --prune
+git fetch origin upstream --tags --prune
 git switch main
 git pull --ff-only origin main
-git switch -c codex/upstream-sync-YYYYMMDD
-git merge --no-ff upstream/main
+git branch backup/main-pre-vNEW HEAD
+git rebase --onto vNEW vOLD main
 ```
 
-Resolve conflicts, run the checks below, push the sync branch, and merge it
-through a pull request. Delete the sync branch after the PR is merged.
+`vOLD` is the upstream tag the current `main` is based on
+(`git describe --tags --abbrev=0 main`) and `vNEW` is the upstream release
+being adopted. Resolve conflicts commit by commit using the rules below, then
+regenerate the lockfile with `corepack pnpm install --lockfile-only` and run the
+checks. After review, publish with:
+
+```bash
+git push --force-with-lease=main:<previous-origin-main-sha> origin main
+```
+
+Upstream tags share the `v*` namespace with fork release tags; never push an
+upstream tag name to `origin`.
 
 ## Intentional fork patches
 
@@ -45,6 +57,9 @@ Keep these decisions when resolving upstream conflicts:
 - Workspace owners have administrative access to every ordinary workspace
   space. Personal spaces are accessible only to their direct members; this
   also applies to owners promoted through the `Root` OIDC group.
+- Personal spaces are never public: page shares and upstream public spaces
+  reject them, public-space listings exclude them, and converting a space to
+  personal deletes its shares and unpublishes it.
 - `LicenseCheckService` exposes `TEAMS_FEATURES` for self-hosted installs.
 - `.github/workflows/release.yml` publishes tagged multi-architecture images
   to this fork's GHCR namespace and must not be replaced by upstream's
@@ -54,12 +69,18 @@ Keep these decisions when resolving upstream conflicts:
 
 ## Required verification
 
+Upstream pins the package manager in `packageManager`; run it through corepack
+so the pinned pnpm version is used. Node 24 or newer works locally, and the
+release image builds on the Node version in `Dockerfile`.
+
 ```bash
 git diff --check
-pnpm exec nx run server:build --skip-nx-cache
-pnpm exec nx run client:build --skip-nx-cache
-pnpm --filter ./apps/server exec jest --runInBand
-pnpm --filter ./apps/client run test
+corepack pnpm install --frozen-lockfile
+corepack pnpm exec nx run server:build --skip-nx-cache
+corepack pnpm exec nx run client:build --skip-nx-cache
+corepack pnpm --filter ./apps/server exec jest --runInBand
+corepack pnpm --filter ./apps/client run test
+docker build -t docmost-teams:sync-check .
 ```
 
 Also run `bash script/bootstrap-local-dev.sh` and verify OIDC login, enforced
