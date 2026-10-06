@@ -2181,8 +2181,8 @@ packages:
   '@fastify/ajv-compiler@4.0.5':
     resolution: {integrity: sha512-KoWKW+MhvfTRWL4qrhUwAAZoaChluo0m0vbiJlGMt2GXvL4LVPQEjt8kSpHI3IBq5Rez8fg+XeH3cneztq+C7A==}
 
-  '@fastify/busboy@3.1.1':
-    resolution: {integrity: sha512-5DGmA8FTdB2XbDeEwc/5ZXBl6UbBAyBOOLlPuBnZ/N1SwdH9Ii+cOX3tBROlDgcTXxjOYnLMVoKk9+FXAw0CJw==}
+  '@fastify/busboy@3.2.2':
+    resolution: {integrity: sha512-yXSS27qPExaXeuLvMRMXOLtpipzfQYNjG3FkunDWKGfMYjKuhFXko9CVzqxm8jcF+lmtS9Fd89QNdh9XDjnbNg==}
 
   '@fastify/cookie@11.1.2':
     resolution: {integrity: sha512-Dtrpk/YOGUsbRMvP/8ZqPpwnMRv0qSqodFdoQ2B589Obc7jw4s4Qla+cV72Bsm7WsZJnqlYFX/i7uSBq0xzg6g==}
@@ -11960,7 +11960,7 @@ snapshots:
       ajv-formats: 3.0.1(ajv@8.18.0)
       fast-uri: 3.1.7
 
-  '@fastify/busboy@3.1.1': {}
+  '@fastify/busboy@3.2.2': {}
 
   '@fastify/cookie@11.1.2':
     dependencies:
@@ -11993,7 +11993,7 @@ snapshots:
 
   '@fastify/multipart@10.1.1':
     dependencies:
-      '@fastify/busboy': 3.1.1
+      '@fastify/busboy': 3.2.2
       '@fastify/deepmerge': 3.1.0
       '@fastify/error': 4.0.0
       fastify-plugin: 6.0.0
