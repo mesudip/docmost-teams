@@ -269,6 +269,9 @@ importers:
       '@excalidraw/excalidraw':
         specifier: 0.18.0-3a5ef40
         version: 0.18.0-3a5ef40(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@floating-ui/react':
+        specifier: 0.27.19
+        version: 0.27.19(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@fontsource-variable/inter':
         specifier: 5.3.0
         version: 5.3.0
@@ -314,6 +317,12 @@ importers:
       '@tanstack/react-virtual':
         specifier: 3.14.3
         version: 3.14.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@tiptap/extension-code':
+        specifier: 3.31.3
+        version: 3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))
+      '@tiptap/extensions':
+        specifier: 3.31.3
+        version: 3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)
       alfaaz:
         specifier: 1.1.0
         version: 1.1.0
@@ -392,6 +401,9 @@ importers:
       react-i18next:
         specifier: 16.5.8
         version: 16.5.8(i18next@25.10.1(typescript@5.9.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3)
+      react-router:
+        specifier: 7.18.2
+        version: 7.18.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react-router-dom:
         specifier: 7.18.2
         version: 7.18.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -873,6 +885,9 @@ importers:
       marked:
         specifier: 17.0.5
         version: 17.0.5
+      nanoid:
+        specifier: 3.3.18
+        version: 3.3.18
 
 packages:
 
