@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -58,7 +59,7 @@ export class PublicSpaceService {
     }
 
     const space = await this.spaceRepo.findBySlug(spaceSlug, workspace.id);
-    if (!space || space.deletedAt) {
+    if (!space || space.deletedAt || space.isPersonal) {
       throw new NotFoundException('Space not found');
     }
 
@@ -175,7 +176,7 @@ export class PublicSpaceService {
   /** Uniform 404 unless the target page's own space is published, not deleted, in this workspace, and unrestricted. */
   private async resolveCrossSpacePublicPage(page: Page, workspace: Workspace) {
     const space = await this.spaceRepo.findById(page.spaceId, workspace.id);
-    if (!space || space.deletedAt) {
+    if (!space || space.deletedAt || space.isPersonal) {
       throw new NotFoundException('Page not found');
     }
 
@@ -272,6 +273,10 @@ export class PublicSpaceService {
       throw new ForbiddenException(
         'Public spaces are not enabled for this workspace',
       );
+    }
+
+    if (enabled && space.isPersonal) {
+      throw new BadRequestException('Private spaces cannot be published');
     }
 
     if (appearance && !this.hasFeature(workspace, Feature.PUBLIC_SPACE_APPEARANCE)) {

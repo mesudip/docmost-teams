@@ -73,6 +73,12 @@ export class PrivateSpaceService {
           .deleteFrom('shares')
           .where('spaceId', '=', space.id)
           .execute();
+
+        await trx
+          .updateTable('publicSpaces')
+          .set({ enabled: false, updatedAt: new Date() })
+          .where('spaceId', '=', space.id)
+          .execute();
       }
 
       updatedSpace = await trx

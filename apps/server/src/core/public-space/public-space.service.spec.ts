@@ -1,4 +1,8 @@
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PublicSpaceService } from './public-space.service';
 import { Feature } from '../../common/features';
 
@@ -158,6 +162,23 @@ describe('PublicSpaceService', () => {
           findBySlug: jest
             .fn()
             .mockResolvedValue({ id: SPACE_ID, deletedAt: new Date() }),
+        },
+      });
+      await expect(
+        service.getPublicSpace('handbook', makeWorkspace(optInSettings)),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('404s for a private space even with an enabled public_spaces row', async () => {
+      const { service } = makeService({
+        spaceRepo: {
+          findBySlug: jest.fn().mockResolvedValue({
+            id: SPACE_ID,
+            slug: 'handbook',
+            workspaceId: WORKSPACE_ID,
+            deletedAt: null,
+            isPersonal: true,
+          }),
         },
       });
       await expect(
@@ -796,6 +817,40 @@ describe('PublicSpaceService', () => {
       );
     });
 
+    it('rejects enabling a private space', async () => {
+      const { service, publicSpaceRepo } = makeService();
+      await expect(
+        service.publish({
+          space: {
+            id: SPACE_ID,
+            workspaceId: WORKSPACE_ID,
+            isPersonal: true,
+          } as any,
+          workspace: makeWorkspace(optInSettings),
+          authUserId: 'u1',
+          enabled: true,
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(publicSpaceRepo.upsert).not.toHaveBeenCalled();
+    });
+
+    it('allows disabling a private space', async () => {
+      const { service, publicSpaceRepo } = makeService();
+      await service.publish({
+        space: {
+          id: SPACE_ID,
+          workspaceId: WORKSPACE_ID,
+          isPersonal: true,
+        } as any,
+        workspace: makeWorkspace(optInSettings),
+        authUserId: 'u1',
+        enabled: false,
+      });
+      expect(publicSpaceRepo.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ enabled: false }),
+      );
+    });
+
     it('defaults every option on except the author byline on first publish', async () => {
       const { service, publicSpaceRepo } = makeService({
         publicSpaceRepo: {
@@ -1055,6 +1110,25 @@ describe('PublicSpaceService', () => {
                 ? { id: 'ps1', spaceId: SPACE_ID, enabled: true }
                 : { id: 'ps2', spaceId, enabled: false },
             ),
+        },
+      });
+      await expect(
+        service.getPublicPage(
+          'handbook',
+          'crossSlug001',
+          makeWorkspace(optInSettings),
+          { includeContent: false },
+        ),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('404s when the target space is private', async () => {
+      const { service } = makeService({
+        pageRepo: { findById: jest.fn().mockResolvedValue(crossSpacePage) },
+        spaceRepo: {
+          findById: jest
+            .fn()
+            .mockResolvedValue({ ...otherSpace, isPersonal: true }),
         },
       });
       await expect(
