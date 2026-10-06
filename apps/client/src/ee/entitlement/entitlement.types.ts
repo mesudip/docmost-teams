@@ -3,7 +3,7 @@ export type Tier =
   | "standard"
   | "business"
   | "enterprise"
-  | "mesudip-fork";
+  | "docmost-teams";
 
 export type Entitlements = {
   cloud: boolean;

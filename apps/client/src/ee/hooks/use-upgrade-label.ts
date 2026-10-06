@@ -10,7 +10,7 @@ export function useUpgradeLabel(): string {
 
   if (!isCloud()) {
     if (isForkTier(entitlements?.tier)) {
-      return t("Not included in the mesudip-fork tier.");
+      return t("Not included in the docmost-teams tier.");
     }
 
     return hasPaidLicenseTier(entitlements?.tier)
