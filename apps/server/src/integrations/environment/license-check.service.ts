@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { EnvironmentService } from './environment.service';
+import { TEAMS_FEATURES, TEAMS_TIER } from '../../teams/features';
 
 @Injectable()
 export class LicenseCheckService {
@@ -45,7 +46,7 @@ export class LicenseCheckService {
       });
       return licenseService.hasFeature(licenseKey, feature);
     } catch {
-      return false;
+      return TEAMS_FEATURES.includes(feature);
     }
   }
 
@@ -58,7 +59,7 @@ export class LicenseCheckService {
       });
       return licenseService.getFeatures(licenseKey);
     } catch {
-      return [];
+      return [...TEAMS_FEATURES];
     }
   }
 
@@ -81,7 +82,7 @@ export class LicenseCheckService {
       return plan ?? 'standard';
     }
 
-    return this.getLicenseType(licenseKey) ?? 'free';
+    return this.getLicenseType(licenseKey) ?? TEAMS_TIER;
   }
 
   private getLicenseType(licenseKey: string): string | null {
