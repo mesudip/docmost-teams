@@ -56,6 +56,7 @@ import { markdownToHtml } from '@docmost/editor-ext';
 import { WatcherService } from '../../watcher/watcher.service';
 import { sql } from 'kysely';
 import { TransclusionService } from '../transclusion/transclusion.service';
+import { deleteSharesInPrivateSpace } from '../../../teams/private-space/share-privacy';
 
 @Injectable()
 export class PageService {
@@ -476,6 +477,7 @@ export class PageService {
           .set({ spaceId: spaceId })
           .where('pageId', 'in', pageIdsToMove)
           .execute();
+        await deleteSharesInPrivateSpace(trx, spaceId, pageIdsToMove);
 
         // Update comments
         await trx
@@ -980,8 +982,9 @@ export class PageService {
   async getRecentPages(
     userId: string,
     pagination: PaginationOptions,
+    personalOnly = false,
   ): Promise<CursorPaginationResult<Page>> {
-    const result = await this.pageRepo.getRecentPages(userId, pagination);
+    const result = await this.pageRepo.getRecentPages(userId, pagination, personalOnly);
 
     if (result.items.length > 0) {
       const pageIds = result.items.map((p) => p.id);

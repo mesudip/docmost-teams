@@ -8,6 +8,7 @@ import { PageRepo } from '@docmost/db/repos/page/page.repo';
 import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
 import { ShareRepo } from '@docmost/db/repos/share/share.repo';
 import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
+import { isSharingAllowedInSpace } from '../../teams/private-space/share-privacy';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const tsquery = require('pg-tsquery')();
@@ -139,6 +140,11 @@ export class SearchService {
       const shareId = searchParams.shareId;
       const share = await this.shareRepo.findById(shareId);
       if (!share || share.workspaceId !== opts.workspaceId) {
+        return { items: [] };
+      }
+      // docmost-teams: like the share endpoints, shares in private spaces or
+      // with sharing turned off answer nothing.
+      if (!(await isSharingAllowedInSpace(this.db, opts.workspaceId, share.spaceId))) {
         return { items: [] };
       }
 

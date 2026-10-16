@@ -24,6 +24,8 @@ const migrator = new Migrator({
     path,
     migrationFolder,
   }),
+  // docmost-teams: fork migrations interleave with upstream ones.
+  allowUnorderedMigrations: true,
 });
 
 run(db, migrator, migrationFolder);

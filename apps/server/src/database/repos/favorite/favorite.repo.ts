@@ -9,6 +9,7 @@ import { ExpressionBuilder, SelectQueryBuilder, sql } from 'kysely';
 import { DB } from '@docmost/db/types/db';
 import { dbOrTx } from '@docmost/db/utils';
 import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
+import { ownersWithSpaceAccessQuery } from '../../../teams/space-access/owner-space-access';
 
 export const FavoriteType = {
   PAGE: 'page',
@@ -177,7 +178,8 @@ export class FavoriteRepo {
           .innerJoin('groupUsers', 'groupUsers.groupId', 'spaceMembers.groupId')
           .select('groupUsers.userId')
           .where('spaceMembers.spaceId', '=', spaceId),
-      );
+      )
+      .union(ownersWithSpaceAccessQuery(db, spaceId));
 
     await db
       .deleteFrom('favorites')

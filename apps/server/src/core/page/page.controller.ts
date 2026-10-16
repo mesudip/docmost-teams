@@ -440,7 +440,7 @@ export class PageController {
       );
     }
 
-    return this.pageService.getRecentPages(user.id, pagination);
+    return this.pageService.getRecentPages(user.id, pagination, recentPageDto.personalOnly);
   }
 
   @HttpCode(HttpStatus.OK)

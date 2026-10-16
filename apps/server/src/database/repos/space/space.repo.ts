@@ -182,7 +182,9 @@ export class SpaceRepo {
       .selectAll('spaces')
       .select((eb) => [this.withMemberCount(eb)])
       .select((eb) => this.withIsPublished(eb))
-      .where('workspaceId', '=', workspaceId);
+      .where('workspaceId', '=', workspaceId)
+      // docmost-teams: private spaces are visible to their creator only.
+      .where('isPersonal', '=', false);
 
     if (pagination.query) {
       query = query.where((eb) =>
