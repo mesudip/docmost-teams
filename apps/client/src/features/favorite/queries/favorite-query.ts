@@ -13,6 +13,17 @@ import {
   ToggleFavoriteParams,
 } from "../services/favorite-service";
 import { FavoriteType } from "../types/favorite.types";
+import { notifications } from "@mantine/notifications";
+import i18n from "@/i18n.ts";
+
+// Without this a rejected request leaves the star unchanged with no hint why.
+function showFavoriteError(error: Error) {
+  notifications.show({
+    message:
+      error["response"]?.data?.message ?? i18n.t("Could not update favorites"),
+    color: "red",
+  });
+}
 
 export function useFavoritesQuery(type?: FavoriteType, spaceId?: string) {
   return useInfiniteQuery({
@@ -65,6 +76,7 @@ export function useAddFavoriteMutation() {
         queryKey: ["favorites", variables.type],
       });
     },
+    onError: showFavoriteError,
   });
 }
 
@@ -88,5 +100,6 @@ export function useRemoveFavoriteMutation() {
         queryKey: ["favorites", variables.type],
       });
     },
+    onError: showFavoriteError,
   });
 }

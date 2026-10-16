@@ -34,7 +34,8 @@ export default function SpaceSettingsModal({
   const spaceAbility = useSpaceAbility(spaceRules);
 
   const [workspace] = useAtom(workspaceAtom);
-  const allowPublicSpaces = isPublicSpacesAllowed(workspace);
+  const allowPublicSpaces =
+    isPublicSpacesAllowed(workspace) && !space?.isPersonal;
   const canManageSettings = spaceAbility.can(
     SpaceCaslAction.Manage,
     SpaceCaslSubject.Settings,
