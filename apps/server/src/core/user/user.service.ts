@@ -125,6 +125,11 @@ export class UserService {
     delete updateUserDto.confirmPassword;
 
     await this.userRepo.updateUser(updateUserDto, userId, workspace.id);
+    // docmost-teams: a changed address is unproven, so SSO won't link to it
+    // without taking over the account (SsoService.findOrCreateUser).
+    if (user.email !== userBefore.email) {
+      await this.userRepo.updateUser({ emailVerifiedAt: null }, userId, workspace.id);
+    }
 
     const changes = diffAuditTrackedFields(
       ['name', 'email'],

@@ -28,6 +28,7 @@ import { UserRepo } from '@docmost/db/repos/user/user.repo';
 import { EnvironmentService } from '../../../integrations/environment/environment.service';
 import { DomainService } from '../../../integrations/environment/domain.service';
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
+import { sql } from 'kysely';
 import { addDays } from 'date-fns';
 import { DISALLOWED_HOSTNAMES, WorkspaceStatus } from '../workspace.constants';
 import { isAdminActingOnOwner } from '../workspace.util';
@@ -103,6 +104,8 @@ export class WorkspaceService {
               'authProviders.name',
               'authProviders.type',
             ])
+            // docmost-teams: lets the login page show the preset's icon.
+            .select(sql<string | null>`auth_providers.settings->>'preset'`.as('preset'))
             .where('authProviders.isEnabled', '=', true)
             .where('workspaceId', '=', workspaceId),
         ).as('authProviders'),
