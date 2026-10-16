@@ -1,6 +1,1 @@
-export interface IAuthProvider {
-  id: string;
-  name: string;
-  type: string;
-  preset?: string | null;
-}
+export type { IAuthProvider } from "@/teams/security/sso/sso.types";
