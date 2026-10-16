@@ -1,2 +1,2 @@
-// Settings → Security & SSO comes with the docmost-teams SSO client.
-export { default } from "@/teams/edition/components/feature-unavailable-page";
+// Settings → Security & SSO is the docmost-teams security page.
+export { default } from "@/teams/security/pages/security";
