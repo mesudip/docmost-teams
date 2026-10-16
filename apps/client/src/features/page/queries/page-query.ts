@@ -295,11 +295,18 @@ export async function fetchAllAncestorChildren(params: SidebarPagesParams) {
   return buildTree(allItems);
 }
 
-export function useRecentChangesQuery(spaceId?: string) {
+export function useRecentChangesQuery(
+  spaceId?: string,
+  options?: { personalOnly?: boolean },
+) {
+  // docmost-teams: the Home "Personal" tab lists pages in private spaces.
+  const personalOnly = options?.personalOnly === true;
   return useInfiniteQuery({
-    queryKey: ["recent-changes", spaceId],
+    queryKey: personalOnly
+      ? ["recent-changes", spaceId, "personal"]
+      : ["recent-changes", spaceId],
     queryFn: ({ pageParam }) =>
-      getRecentChanges({ spaceId, cursor: pageParam, limit: 15 }),
+      getRecentChanges({ spaceId, personalOnly, cursor: pageParam, limit: 15 }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasNextPage ? lastPage.meta.nextCursor : undefined,

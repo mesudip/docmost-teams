@@ -34,6 +34,7 @@ import clsx from "clsx";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
 import { AutoTooltipText } from "@/components/ui/auto-tooltip-text.tsx";
+import { PrivateSpaceIndicator } from "@/teams/private-space/components/private-space-indicator";
 
 function WatchButton({ spaceId, watchedIds, size = 16 }: { spaceId: string; watchedIds: Set<string>; size?: number }) {
   const { t } = useTranslation();
@@ -155,9 +156,12 @@ export default function AllSpacesList({
                           size="md"
                         />
                         <div style={{ minWidth: 0, overflow: "hidden", maxWidth: 350 }}>
-                          <AutoTooltipText fz="sm" fw={500} lineClamp={1}>
-                            {space.name}
-                          </AutoTooltipText>
+                          <Group gap={6} wrap="nowrap">
+                            <AutoTooltipText fz="sm" fw={500} lineClamp={1}>
+                              {space.name}
+                            </AutoTooltipText>
+                            <PrivateSpaceIndicator isPrivate={space.isPersonal} />
+                          </Group>
                           {space.description && (
                             <Text fz="xs" c="dimmed" lineClamp={2}>
                               {space.description}

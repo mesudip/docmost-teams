@@ -6,6 +6,10 @@ import CreatedByMe from "./created-by-me";
 import { useTranslation } from "react-i18next";
 import { useAtom } from "jotai";
 import { homeTabAtom } from "@/features/home/atoms/home-tab-atom";
+import {
+  PersonalPagesPanel,
+  PersonalPagesTab,
+} from "@/teams/private-space/components/personal-pages";
 
 export default function HomeTabs() {
   const { t } = useTranslation();
@@ -35,6 +39,7 @@ export default function HomeTabs() {
             {t("Created by me")}
           </Text>
         </Tabs.Tab>
+        <PersonalPagesTab />
       </Tabs.List>
 
       <Space my="md" />
@@ -48,6 +53,7 @@ export default function HomeTabs() {
       <Tabs.Panel value="created">
         <CreatedByMe />
       </Tabs.Panel>
+      <PersonalPagesPanel />
     </Tabs>
   );
 }

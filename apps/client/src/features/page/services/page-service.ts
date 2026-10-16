@@ -100,7 +100,7 @@ export async function getPageBreadcrumbs(
 }
 
 export async function getRecentChanges(
-  params?: QueryParams & { spaceId?: string },
+  params?: QueryParams & { spaceId?: string; personalOnly?: boolean },
 ): Promise<IPagination<IPage>> {
   const req = await api.post("/pages/recent", params);
   return req.data;

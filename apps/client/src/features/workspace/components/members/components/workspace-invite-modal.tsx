@@ -2,10 +2,14 @@ import { WorkspaceInviteForm } from "@/features/workspace/components/members/com
 import { Button, Divider, Modal, ScrollArea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
+import useUserRole from "@/hooks/use-user-role";
 
 export default function WorkspaceInviteModal() {
   const { t } = useTranslation();
   const [opened, { open, close }] = useDisclosure(false);
+  const { isAdmin } = useUserRole();
+
+  if (!isAdmin) return null;
 
   return (
     <>

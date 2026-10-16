@@ -6,6 +6,7 @@ import { ISpace } from "../../types/space.types";
 import { useTranslation } from "react-i18next";
 import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
+import { PrivateSpaceIndicator } from "@/teams/private-space/components/private-space-indicator";
 
 interface SpaceSelectProps {
   onChange: (value: ISpace) => void;
@@ -31,6 +32,7 @@ const renderSelectOption: SelectProps["renderOption"] = ({ option }) => (
       <Text size="sm" lineClamp={1}>
         {option.label}
       </Text>
+      <PrivateSpaceIndicator isPrivate={option?.["isPersonal"]} />
     </div>
   </Group>
 );
@@ -66,6 +68,7 @@ export function SpaceSelect({
             label: space.name,
             value: space.slug,
             icon: space.logo,
+            isPersonal: space.isPersonal,
           };
         });
 

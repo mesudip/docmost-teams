@@ -10,9 +10,23 @@ import WorkspaceDefaultPageEditMode from "@/features/workspace/components/settin
 import PersonalSpacesSetting from "@/ee/personal-space/components/personal-spaces-setting.tsx";
 import AllowPublicSpaces from "@/features/workspace/components/settings/components/allow-public-spaces.tsx";
 import { DocumentTitle } from "@/components/ui/document-title.tsx";
+import useUserRole from "@/hooks/use-user-role.tsx";
+import { Navigate } from "react-router-dom";
+import { useAtomValue } from "jotai";
+import { currentUserAtom } from "@/features/user/atoms/current-user-atom.ts";
 
 export default function WorkspaceSettings() {
   const { t } = useTranslation();
+  const { isAdmin } = useUserRole();
+  const currentUser = useAtomValue(currentUserAtom);
+
+  // docmost-teams: workspace settings are admin-only. The current user loads
+  // after the first render, so wait for it before redirecting.
+  if (!currentUser) return null;
+  if (!isAdmin) {
+    return <Navigate to="/settings/account/profile" replace />;
+  }
+
   return (
     <>
       <DocumentTitle title="Workspace Settings" />

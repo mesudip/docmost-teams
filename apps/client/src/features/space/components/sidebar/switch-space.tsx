@@ -13,12 +13,14 @@ import { CustomAvatar } from "@/components/ui/custom-avatar.tsx";
 import { AvatarIconType } from "@/features/attachments/types/attachment.types.ts";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { PrivateSpaceIndicator } from "@/teams/private-space/components/private-space-indicator";
 
 interface SwitchSpaceProps {
   spaceName: string;
   spaceSlug: string;
   spaceIcon?: string;
   isPublished?: boolean;
+  isPersonal?: boolean;
 }
 
 export function SwitchSpace({
@@ -26,6 +28,7 @@ export function SwitchSpace({
   spaceSlug,
   spaceIcon,
   isPublished,
+  isPersonal,
 }: SwitchSpaceProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -79,6 +82,7 @@ export function SwitchSpace({
               />
             </Tooltip>
           )}
+          <PrivateSpaceIndicator isPrivate={isPersonal} />
         </Button>
       </Popover.Target>
       <Popover.Dropdown>

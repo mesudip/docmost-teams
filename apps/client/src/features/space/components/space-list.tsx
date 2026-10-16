@@ -13,6 +13,7 @@ import { SearchInput } from "@/components/common/search-input.tsx";
 import NoTableResults from "@/components/common/no-table-results.tsx";
 import { usePaginateAndSearch } from "@/hooks/use-paginate-and-search.tsx";
 import rowClasses from "@/components/ui/clickable-table-row.module.css";
+import { PrivateSpaceIndicator } from "@/teams/private-space/components/private-space-indicator";
 
 export default function SpaceList() {
   const { t } = useTranslation();
@@ -65,9 +66,12 @@ export default function SpaceList() {
                       name={space.name}
                     />
                     <div style={{ minWidth: 0, overflow: "hidden" }}>
-                      <AutoTooltipText fz="sm" fw={500} lineClamp={1}>
-                        {space.name}
-                      </AutoTooltipText>
+                      <Group gap={6} wrap="nowrap">
+                        <AutoTooltipText fz="sm" fw={500} lineClamp={1}>
+                          {space.name}
+                        </AutoTooltipText>
+                        <PrivateSpaceIndicator isPrivate={space.isPersonal} />
+                      </Group>
                       <Text fz="xs" c="dimmed" lineClamp={2}>
                         {space.description}
                       </Text>

@@ -24,6 +24,9 @@ import { AvatarIconType } from "@/features/attachments/types/attachment.types";
 import { useHasFeature } from "@/ee/hooks/use-feature";
 import { Feature } from "@/ee/features";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
+import useUserRole from "@/hooks/use-user-role";
+import { PinnedPersonalSpaces } from "@/teams/private-space/components/pinned-personal-spaces";
+import { usePinnedPersonalSpaceIds } from "@/teams/private-space/queries/private-space-query";
 
 export default function GlobalSidebar() {
   const { t } = useTranslation();
@@ -33,6 +36,7 @@ export default function GlobalSidebar() {
   const toggleMobileSidebar = useToggleSidebar(mobileSidebarAtom);
   const hasTemplates = useHasFeature(Feature.TEMPLATES);
   const upgradeLabel = useUpgradeLabel();
+  const { isAdmin } = useUserRole();
   const mainNavItems = [
     { label: "Home", icon: IconHome, path: "/home" },
     { label: "Favorites", icon: IconStar, path: "/favorites" },
@@ -46,8 +50,9 @@ export default function GlobalSidebar() {
   ];
   const { data: favoriteSpacesData, isPending: isFavoritesPending } = useFavoritesQuery("space");
   const favoriteSpaces = favoriteSpacesData?.pages.flatMap((p) => p.items) ?? [];
+  const pinnedPersonalSpaceIds = usePinnedPersonalSpaceIds();
   const sortedFavoriteSpaces = [...favoriteSpaces]
-    .filter((fav) => fav.space)
+    .filter((fav) => fav.space && !pinnedPersonalSpaceIds.has(fav.space.id))
     .sort((a, b) => {
       const cmp = (a.space!.name ?? "").localeCompare(b.space!.name ?? "", undefined, { sensitivity: "base" });
       return cmp !== 0 ? cmp : a.id.localeCompare(b.id);
@@ -103,6 +108,8 @@ export default function GlobalSidebar() {
           )}
         </div>
 
+        <PinnedPersonalSpaces onNavigate={handleNavClick} />
+
         <Divider my="xs" />
         <div className={classes.section}>
           <Text component="h2" className={classes.sectionHeader}>{t("Favorite spaces")}</Text>
@@ -150,6 +157,7 @@ export default function GlobalSidebar() {
       </ScrollArea>
 
       <div className={classes.bottomSection}>
+        {isAdmin && (
         <UnstyledButton
           className={classes.link}
           onClick={openInvite}
@@ -157,6 +165,7 @@ export default function GlobalSidebar() {
           <IconUserPlus className={classes.linkIcon} stroke={2} />
           <span>{t("Invite People")}</span>
         </UnstyledButton>
+        )}
         <Link
           className={classes.link}
           data-active={active.startsWith("/settings") || undefined}
