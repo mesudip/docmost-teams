@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
+        "@/ee": "/src/teams/ee-compat", // docmost-teams: keep ahead of "@"
         "@": "/src",
       },
     },

@@ -23,6 +23,7 @@
     "allowSyntheticDefaultImports": true,
 
     "paths": {
+      "@/ee/*": ["./src/teams/ee-compat/*"],
       "@/*": ["./src/*"]
     }
   },

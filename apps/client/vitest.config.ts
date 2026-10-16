@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      '@/ee': path.resolve(__dirname, './src/teams/ee-compat'), // docmost-teams: keep ahead of '@'
       '@': path.resolve(__dirname, './src'),
     },
   },
