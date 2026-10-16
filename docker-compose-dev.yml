@@ -1,0 +1,94 @@
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: docmost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - docmost_dev_db_pg18:/var/lib/postgresql
+
+  redis:
+    image: redis:8
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - docmost_dev_redis:/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.4
+    command: start-dev --import-realm --health-enabled=true
+    ports:
+      - "8081:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: http://localhost:8081
+      KC_HOSTNAME_STRICT: "false"
+    restart: unless-stopped
+    volumes:
+      - ./keycloak/realm-docmost-local.json:/opt/keycloak/data/import/realm-docmost-local.json:ro
+
+  keycloak-setup:
+    image: python:3.11-slim
+    depends_on:
+      - keycloak
+    entrypoint:
+      - sh
+      - -c
+      - |
+        while ! python3 -c 'import urllib.request; urllib.request.urlopen("http://keycloak:8080/realms/master")' 2>/dev/null; do
+          sleep 2
+        done
+        python3 /scripts/setup_keycloak_client.py \
+          --base-url http://keycloak:8080 \
+          --realm docmost-local \
+          --admin-user admin \
+          --admin-password admin \
+          --client-id docmost-local \
+          --client-secret docmost-local-secret \
+          --redirect-base-url http://localhost:5173 \
+          --redirect-base-url http://localhost:5174 \
+          --redirect-base-url http://localhost:5175 \
+          --redirect-base-url http://localhost:3000 \
+          --default-user admin:admin \
+          --default-user user1:pass \
+          --default-user user2:pass
+    restart: "no"
+    volumes:
+      - ./scripts:/scripts:ro
+
+  docmost-bootstrap:
+    image: python:3.11-slim
+    depends_on:
+      - db
+      - redis
+      - keycloak-setup
+    entrypoint:
+      - python3
+      - /scripts/setup_docmost_local_auth.py
+    environment:
+      DOCMOST_API_BASE_URL: http://host.docker.internal:3000
+      DOCMOST_PUBLIC_BASE_URL: http://localhost:5173
+      DOCMOST_ADMIN_NAME: Local Admin
+      DOCMOST_ADMIN_EMAIL: admin@docmost.local
+      DOCMOST_ADMIN_PASSWORD: admin12345
+      DOCMOST_WORKSPACE_NAME: Docmost Local
+      KEYCLOAK_ISSUER: http://localhost:8081/realms/docmost-local
+      KEYCLOAK_CLIENT_ID: docmost-local
+      KEYCLOAK_CLIENT_SECRET: docmost-local-secret
+      BOOTSTRAP_TIMEOUT_SECS: "900"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: "no"
+    volumes:
+      - ./scripts:/scripts:ro
+
+volumes:
+  docmost_dev_db_pg18:
+  docmost_dev_redis:
