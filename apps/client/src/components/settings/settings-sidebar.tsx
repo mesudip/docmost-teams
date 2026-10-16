@@ -43,6 +43,7 @@ import AppVersion from "@/components/settings/app-version.tsx";
 import { mobileSidebarAtom } from "@/components/layouts/global/hooks/atoms/sidebar-atom.ts";
 import { useToggleSidebar } from "@/components/layouts/global/hooks/hooks/use-toggle-sidebar.ts";
 import { useSettingsNavigation } from "@/hooks/use-settings-navigation";
+import { hasPaidLicenseTier } from "@/teams/entitlement/tier.utils";
 
 type DataItem = {
   label: string;
@@ -79,7 +80,7 @@ const groupedData: DataGroup[] = [
   {
     heading: "Workspace",
     items: [
-      { label: "General", icon: IconSettings, path: "/settings/workspace" },
+      { label: "General", icon: IconSettings, path: "/settings/workspace", role: "admin" },
       { label: "Members", icon: IconUsers, path: "/settings/members" },
       {
         label: "Billing",
@@ -115,6 +116,7 @@ const groupedData: DataGroup[] = [
         label: "AI settings",
         icon: IconSparkles,
         path: "/settings/ai",
+        feature: Feature.AI,
         role: "admin",
       },
       {
@@ -162,6 +164,8 @@ export default function SettingsSidebar() {
     if (item.env === "selfhosted" && isCloud()) return false;
     if (item.role === "admin" && !isAdmin) return false;
     if (item.role === "owner" && !isOwner) return false;
+    // docmost-teams: hide what the server doesn't grant.
+    if (item.feature && !hasFeature(item.feature)) return false;
     return true;
   };
 
@@ -200,14 +204,14 @@ export default function SettingsSidebar() {
               prefetchHandler = prefetchBilling;
               break;
             case "License & Edition":
-              if (entitlements?.tier !== "free") {
+              if (hasPaidLicenseTier(entitlements?.tier)) {
                 prefetchHandler = prefetchLicense;
               }
               break;
             case "Security & SSO":
               prefetchHandler = () => {
                 prefetchSsoProviders();
-                prefetchScimTokens();
+                if (hasFeature(Feature.SCIM)) prefetchScimTokens();
               };
               break;
             case "Public sharing":
