@@ -104,6 +104,9 @@ export class SpaceMemberService {
     if (!space) {
       throw new NotFoundException('Space not found');
     }
+    if (space.isPersonal) {
+      throw new BadRequestException('Private spaces cannot be shared');
+    }
 
     // make sure we have valid workspace users
     const validUsersQuery = this.db
@@ -248,6 +251,11 @@ export class SpaceMemberService {
       if (!space) {
         throw new NotFoundException('Space not found');
       }
+      if (space.isPersonal) {
+        throw new BadRequestException(
+          'Private space membership cannot be changed',
+        );
+      }
 
       const spaceMember = await this.spaceMemberRepo.getSpaceMemberByTypeId(
         dto.spaceId,
@@ -325,6 +333,11 @@ export class SpaceMemberService {
       );
       if (!space) {
         throw new NotFoundException('Space not found');
+      }
+      if (space.isPersonal) {
+        throw new BadRequestException(
+          'Private space membership cannot be changed',
+        );
       }
 
       const spaceMember = await this.spaceMemberRepo.getSpaceMemberByTypeId(

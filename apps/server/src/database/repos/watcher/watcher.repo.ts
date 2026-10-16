@@ -8,6 +8,7 @@ import { ExpressionBuilder } from 'kysely';
 import { DB } from '@docmost/db/types/db';
 import { jsonObjectFrom } from 'kysely/helpers/postgres';
 import { dbOrTx } from '@docmost/db/utils';
+import { ownersWithSpaceAccessQuery } from '../../../teams/space-access/owner-space-access';
 
 export const WatcherType = {
   PAGE: 'page',
@@ -281,7 +282,8 @@ export class WatcherRepo {
           .innerJoin('groupUsers', 'groupUsers.groupId', 'spaceMembers.groupId')
           .select('groupUsers.userId')
           .where('spaceMembers.spaceId', '=', spaceId),
-      );
+      )
+      .union(ownersWithSpaceAccessQuery(db, spaceId));
 
     await db
       .deleteFrom('watchers')
@@ -326,7 +328,8 @@ export class WatcherRepo {
           .innerJoin('groupUsers', 'groupUsers.groupId', 'spaceMembers.groupId')
           .select('groupUsers.userId')
           .where('spaceMembers.spaceId', '=', spaceId),
-      );
+      )
+      .union(ownersWithSpaceAccessQuery(db, spaceId));
 
     await db
       .deleteFrom('watchers')

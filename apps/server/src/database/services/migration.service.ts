@@ -19,6 +19,8 @@ export class MigrationService {
         path,
         migrationFolder: path.join(__dirname, '..', 'migrations'),
       }),
+      // docmost-teams: fork migrations interleave with upstream ones.
+      allowUnorderedMigrations: true,
     });
 
     const { error, results } = await migrator.migrateToLatest();

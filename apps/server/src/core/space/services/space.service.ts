@@ -117,6 +117,9 @@ export class SpaceService {
         workspaceId: workspaceId,
         slug: createSpaceDto.slug,
         isPersonal: options?.isPersonal ?? false,
+        ...(options?.isPersonal
+          ? { settings: { sharing: { disabled: true } } }
+          : {}),
       },
       trx,
     );

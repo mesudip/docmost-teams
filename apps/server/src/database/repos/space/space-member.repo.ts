@@ -6,6 +6,12 @@ import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
 import { dbOrTx } from '@docmost/db/utils';
 import { sql } from 'kysely';
 import {
+  ownerAccessibleSpaceIdsQuery,
+  ownerSpaceRoleQuery,
+  ownerSpaceRolesQuery,
+  ownersWithSpaceAccessQuery,
+} from '../../../teams/space-access/owner-space-access';
+import {
   InsertableSpaceMember,
   SpaceMember,
   UpdatableSpaceMember,
@@ -236,9 +242,17 @@ export class SpaceMemberRepo {
       async () => {
         const roles = await this.db
           .selectFrom('spaceMembers')
-          .select(['userId', 'role'])
+          .innerJoin('spaces', 'spaces.id', 'spaceMembers.spaceId')
+          .select(['spaceMembers.userId', 'spaceMembers.role'])
           .where('userId', '=', userId)
           .where('spaceId', '=', spaceId)
+          .where((eb) =>
+            eb('spaces.isPersonal', '=', false).or(
+              'spaces.creatorId',
+              '=',
+              userId,
+            ),
+          )
           .unionAll(
             this.db
               .selectFrom('spaceMembers')
@@ -247,10 +261,13 @@ export class SpaceMemberRepo {
                 'groupUsers.groupId',
                 'spaceMembers.groupId',
               )
+              .innerJoin('spaces', 'spaces.id', 'spaceMembers.spaceId')
               .select(['groupUsers.userId', 'spaceMembers.role'])
               .where('groupUsers.userId', '=', userId)
-              .where('spaceMembers.spaceId', '=', spaceId),
+              .where('spaceMembers.spaceId', '=', spaceId)
+              .where('spaces.isPersonal', '=', false),
           )
+          .unionAll(ownerSpaceRoleQuery(this.db, userId, spaceId))
           .execute();
 
         if (!roles || roles.length === 0) {
@@ -269,16 +286,32 @@ export class SpaceMemberRepo {
 
     const rows = await this.db
       .selectFrom('spaceMembers')
-      .select('userId')
+      .innerJoin('spaces', 'spaces.id', 'spaceMembers.spaceId')
+      .select('spaceMembers.userId')
       .where('userId', 'in', userIds)
       .where('spaceId', '=', spaceId)
+      .where((eb) =>
+        eb.or([
+          eb('spaces.isPersonal', '=', false),
+          eb('spaces.creatorId', '=', eb.ref('spaceMembers.userId')),
+        ]),
+      )
       .unionAll(
         this.db
           .selectFrom('spaceMembers')
           .innerJoin('groupUsers', 'groupUsers.groupId', 'spaceMembers.groupId')
           .select('groupUsers.userId')
           .where('groupUsers.userId', 'in', userIds)
-          .where('spaceMembers.spaceId', '=', spaceId),
+          .where('spaceMembers.spaceId', '=', spaceId)
+          .innerJoin('spaces', 'spaces.id', 'spaceMembers.spaceId')
+          .where('spaces.isPersonal', '=', false),
+      )
+      .unionAll(
+        ownersWithSpaceAccessQuery(this.db, spaceId).where(
+          'users.id',
+          'in',
+          userIds,
+        ),
       )
       .execute();
 
@@ -301,14 +334,19 @@ export class SpaceMemberRepo {
       .innerJoin('spaces', 'spaces.id', 'spaceMembers.spaceId')
       .select('spaces.id')
       .where('userId', '=', userId)
+      .where((eb) =>
+        eb('spaces.isPersonal', '=', false).or('spaces.creatorId', '=', userId),
+      )
       .union(
         this.db
           .selectFrom('spaceMembers')
           .innerJoin('groupUsers', 'groupUsers.groupId', 'spaceMembers.groupId')
           .innerJoin('spaces', 'spaces.id', 'spaceMembers.spaceId')
           .select('spaces.id')
-          .where('groupUsers.userId', '=', userId),
-      );
+          .where('groupUsers.userId', '=', userId)
+          .where('spaces.isPersonal', '=', false),
+      )
+      .union(ownerAccessibleSpaceIdsQuery(this.db, userId));
   }
 
   async getUserSpaceIds(userId: string): Promise<string[]> {
@@ -324,9 +362,13 @@ export class SpaceMemberRepo {
 
     return this.db
       .selectFrom('spaceMembers')
-      .select(['spaceId', 'role'])
+      .innerJoin('spaces', 'spaces.id', 'spaceMembers.spaceId')
+      .select(['spaceMembers.spaceId', 'spaceMembers.role'])
       .where('userId', '=', userId)
       .where('spaceId', 'in', spaceIds)
+      .where((eb) =>
+        eb('spaces.isPersonal', '=', false).or('spaces.creatorId', '=', userId),
+      )
       .unionAll(
         this.db
           .selectFrom('spaceMembers')
@@ -335,10 +377,13 @@ export class SpaceMemberRepo {
             'groupUsers.groupId',
             'spaceMembers.groupId',
           )
+          .innerJoin('spaces', 'spaces.id', 'spaceMembers.spaceId')
           .select(['spaceMembers.spaceId', 'spaceMembers.role'])
           .where('groupUsers.userId', '=', userId)
-          .where('spaceMembers.spaceId', 'in', spaceIds),
+          .where('spaceMembers.spaceId', 'in', spaceIds)
+          .where('spaces.isPersonal', '=', false),
       )
+      .unionAll(ownerSpaceRolesQuery(this.db, userId, spaceIds))
       .execute();
   }
 

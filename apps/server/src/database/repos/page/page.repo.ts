@@ -347,13 +347,22 @@ export class PageRepo {
     });
   }
 
-  async getRecentPages(userId: string, pagination: PaginationOptions) {
-    const query = this.db
+  async getRecentPages(userId: string, pagination: PaginationOptions, personalOnly = false) {
+    let query = this.db
       .selectFrom('pages')
       .select(this.baseFields)
       .select((eb) => this.withSpace(eb))
       .where('spaceId', 'in', this.spaceMemberRepo.getUserSpaceIdsQuery(userId))
       .where('deletedAt', 'is', null);
+
+    // docmost-teams: the Home "Personal" tab lists pages in private spaces.
+    if (personalOnly) {
+      query = query.where(
+        'spaceId',
+        'in',
+        this.db.selectFrom('spaces').select('id').where('isPersonal', '=', true),
+      );
+    }
 
     return executeWithCursorPagination(query, {
       perPage: pagination.limit,
