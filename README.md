@@ -12,6 +12,10 @@
 </div>
 <br />
 
+> [!IMPORTANT]
+> **Pull requests are not accepted, and no new features are planned.**
+> This is a personal fork, published for people with similar needs.
+
 ## About
 
 [Docmost](https://github.com/docmost/docmost) is open-source collaborative wiki
