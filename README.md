@@ -40,55 +40,21 @@ or endorsed by Docmost.
 
 ## What docmost-teams adds
 
-On top of the open-source Docmost release it mirrors, docmost-teams provides:
+Everything in open-source Docmost, plus:
 
-- **Single sign-on.** Sign in with Keycloak, Google, Microsoft Entra ID,
-  Facebook, or any other OpenID Connect provider, using the authorization
-  code flow with PKCE.
-  - Each provider has a guided setup form with its callback URL, and a test
-    button that checks the configuration before you enable it.
-  - Optionally create accounts on first login.
-  - Require a verified email claim. This is on by default; Microsoft and
-    Facebook don't send that claim.
-  - Restrict Google sign-in to one Google Workspace domain. Microsoft sign-in
-    is limited to a single tenant.
-  - Enforce SSO for the whole workspace. The last enabled provider can't be
-    disabled or deleted while SSO is enforced.
-  - Only workspace owners can add, change, or test providers; admins can view
-    them. A provider decides who signs in as which account, so this keeps
-    admins from granting themselves more access.
-  - Sign-in matches existing accounts by email. If an account's email was
-    changed in Docmost and never verified, its first SSO sign-in takes it
-    over: its other sessions end and its password is replaced, so nobody
-    can claim a colleague's address ahead of them.
-- **Identity-provider group and role sync.** At every login, groups from a
-  configurable claim (nested paths such as `realm_access.roles` work) are
-  synced into Docmost groups, optionally filtered by wildcard patterns.
-  Owner and admin groups grant workspace roles. Both lists start empty for
-  new providers; group-sync providers created before role mapping existed
-  keep their `Root` → owner rule as a visible setting. Docmost records what the provider
-  assigned and removes only that when the user leaves the group, restoring
-  their previous role. Memberships and roles assigned in Docmost are never
-  removed.
-- **Private spaces.**
-  - Once an admin enables private spaces for the workspace, members can create
-    any number of them, and only the creator can see each one.
-  - Admins can convert a space with a single member into that member's private
-    space, and the owner can convert it back.
-  - Private spaces can't be shared publicly or published as public spaces.
-    Moving a page into one removes its public share.
-  - Workspace owners can't open other people's private spaces.
-  - Membership of a private space can't be changed.
-- **Owner access to workspace spaces.** Workspace owners administer every
-  ordinary (non-private) space, and workspace settings are limited to admins.
-- **Workspace security settings** in **Settings → Security & SSO**: allowed
-  email domains for sign-ups, SSO sign-ins and invitations, a workspace-wide
-  switch that turns off public sharing, and how long pages stay in the
-  trash. Space admins can also turn off public sharing for a single space.
-- **All of this for self-hosted installs**, without an upstream Enterprise
-  license and without any Enterprise-licensed code.
-- **Multi-architecture container images** (`linux/amd64`, `linux/arm64`)
-  published to the GitHub Container Registry for every release.
+- **Sign in with your company account.** Use Keycloak, Google, Microsoft,
+  Facebook, or any OpenID Connect provider. Setup is a guided form with a test
+  button, and you can require everyone to sign in this way.
+- **Teams and roles from your identity provider.** Groups from your provider
+  become Docmost groups at sign-in, and you choose which groups make someone
+  an owner or admin.
+- **Private spaces.** Members can create spaces only they can see, for drafts
+  and personal notes. Not even workspace owners can open them.
+- **Owners can manage every shared space**, without being added to each one.
+- **Security settings.** Limit sign-ups to your email domains, turn off public
+  sharing, and choose how long deleted pages are kept.
+- **Free to self-host.** No license key, and no Enterprise-licensed code.
+- **Ready-made images** for Intel and ARM servers with every release.
 
 ## Self-hosting
 
